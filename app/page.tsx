@@ -11,7 +11,7 @@ function getLocale(searchParams: { lang?: string }) {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<{ lang?: string; tag?: string; intent?: string; sort?: string }>;
 }) {
   const params = await searchParams;
   const locale = getLocale(params);
@@ -29,6 +29,11 @@ export default async function Home({
       <TrackView event={TRACKING_EVENTS.feedView} properties={{ locale }} />
       <FeedClient
         locale={locale}
+        initialFilters={{
+          tag: params.tag,
+          intent: params.intent,
+          sort: params.sort,
+        }}
         initialVideos={videos}
         initialComments={Object.fromEntries(commentsEntries)}
       />

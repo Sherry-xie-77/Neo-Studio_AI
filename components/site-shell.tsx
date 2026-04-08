@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { type ReactNode } from "react";
 
 import { LanguageToggle } from "@/components/language-toggle";
@@ -15,32 +16,51 @@ export function SiteShell({
   className?: string;
 }) {
   return (
-    <div className="min-h-screen bg-[#08070c] text-stone-100">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(231,145,71,0.12),transparent_36%),radial-gradient(circle_at_top_right,rgba(91,162,255,0.12),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_28%)]" />
-      <div className="relative mx-auto flex min-h-screen w-full max-w-[1640px] flex-col px-4 pb-10 pt-5 sm:px-6 lg:px-8">
-        <header className="mb-6 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-sm font-semibold tracking-[0.24em] text-orange-200">
-              NS
-            </div>
-            <div>
-              <div className="text-sm font-semibold tracking-[0.2em] text-stone-50">
-                Neo-Studio
-              </div>
-              <div className="text-xs tracking-[0.18em] text-stone-400">
-                AI REMIX VIDEO FEED
-              </div>
-            </div>
-          </Link>
+    <div className="min-h-screen text-[var(--text)]" data-locale={locale}>
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1640px] flex-col px-4 pb-10 pt-4 sm:px-6 lg:px-8">
+        <header className="sticky top-3 z-40 mb-8">
+          <div className="neo-surface rounded-[1.75rem] px-4 py-3 sm:px-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <Link href={`/?lang=${locale}`} className="mr-2 flex min-w-0 items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[radial-gradient(circle_at_30%_30%,rgba(247,224,184,0.34),rgba(122,91,42,0.08))] text-sm font-semibold tracking-[0.28em] text-[var(--gold)]">
+                  NS
+                </div>
+                <div className="min-w-0">
+                  <div className="neo-display truncate text-xl leading-none text-[var(--text)]">
+                    Neo-Studio
+                  </div>
+                  <div className="truncate text-[11px] uppercase tracking-[0.24em] text-[var(--text-soft)]">
+                    {locale === "zh" ? "Explore / Create" : "Explore / Create"}
+                  </div>
+                </div>
+              </Link>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/create?lang=${locale}`}
-              className="rounded-full border border-white/12 px-4 py-2 text-sm text-stone-200 transition hover:border-white/30 hover:bg-white/6"
-            >
-              {locale === "zh" ? "创作" : "Create"}
-            </Link>
-            <LanguageToggle locale={locale} />
+              <nav className="ml-auto hidden items-center gap-2 sm:flex">
+                <Link
+                  href={`/?lang=${locale}`}
+                  className="neo-button-secondary inline-flex items-center px-4 text-sm"
+                >
+                  {locale === "zh" ? "探索" : "Explore"}
+                </Link>
+                <Link
+                  href={`/create?lang=${locale}`}
+                  className="neo-button-secondary inline-flex items-center px-4 text-sm"
+                >
+                  {locale === "zh" ? "创作" : "Create"}
+                </Link>
+              </nav>
+
+              <div className="ml-auto flex items-center gap-2">
+                <LanguageToggle locale={locale} />
+                <Link
+                  href={`/create?lang=${locale}`}
+                  className="neo-button-primary inline-flex items-center gap-2 px-5 text-sm"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>{locale === "zh" ? "开始创作" : "Start creating"}</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </header>
 

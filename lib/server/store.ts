@@ -36,6 +36,7 @@ async function readStore(): Promise<StoreShape> {
   await ensureStoreFile();
   const content = await fs.readFile(dataFile, "utf8");
   const parsed = JSON.parse(content) as Partial<StoreShape>;
+  const initial = makeInitialStore();
 
   if (
     !parsed.feedVideos ||
@@ -45,7 +46,36 @@ async function readStore(): Promise<StoreShape> {
     !parsed.generations ||
     !parsed.sessions
   ) {
-    const next = makeInitialStore();
+    await writeStore(initial);
+    return initial;
+  }
+
+  const hasRichFeedShape = Object.values(parsed.feedVideos).every(
+    (video) =>
+      video &&
+      typeof video === "object" &&
+      "summary" in video &&
+      "recommendationReason" in video &&
+      "useCases" in video &&
+      "breakdownSteps" in video,
+  );
+  const hasRichTemplateShape = Object.values(parsed.templates).every(
+    (template) =>
+      template &&
+      typeof template === "object" &&
+      "summary" in template &&
+      "promptFields" in template &&
+      "quickTweaks" in template,
+  );
+
+  if (!hasRichFeedShape || !hasRichTemplateShape) {
+    const next: StoreShape = {
+      ...initial,
+      comments: parsed.comments ?? initial.comments,
+      likes: parsed.likes ?? initial.likes,
+      generations: parsed.generations ?? initial.generations,
+      sessions: parsed.sessions ?? initial.sessions,
+    };
     await writeStore(next);
     return next;
   }
