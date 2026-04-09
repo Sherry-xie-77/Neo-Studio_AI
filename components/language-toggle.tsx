@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import { type Locale } from "@/lib/types";
 
 export function LanguageToggle({ locale }: { locale: Locale }) {
   const nextLocale = locale === "en" ? "zh" : "en";
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams.toString());
+  params.set("lang", nextLocale);
 
   return (
     <Link

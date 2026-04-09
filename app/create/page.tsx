@@ -9,7 +9,12 @@ function getLocale(searchParams: { lang?: string }) {
 export default async function CreatePage({
   searchParams,
 }: {
-  searchParams: Promise<{ lang?: string; template?: string; from?: string }>;
+  searchParams: Promise<{
+    lang?: string;
+    template?: string;
+    from?: string;
+    model?: "kling" | "veo3" | "seedance2";
+  }>;
 }) {
   const params = await searchParams;
   const locale = getLocale(params);
@@ -22,6 +27,7 @@ export default async function CreatePage({
         templates={templates}
         initialTemplateSlug={params.template}
         fromVideoId={params.from}
+        initialModel={params.model}
       />
     </SiteShell>
   );

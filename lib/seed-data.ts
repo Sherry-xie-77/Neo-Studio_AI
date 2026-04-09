@@ -4,6 +4,31 @@ type SeedDescriptor = {
   slug: string;
   titleEn: string;
   titleZh: string;
+  summaryEn?: string;
+  summaryZh?: string;
+  recommendationReasonEn?: string;
+  recommendationReasonZh?: string;
+  useCasesEn?: string[];
+  useCasesZh?: string[];
+  trendLabelEn?: string;
+  trendLabelZh?: string;
+  remixDifficulty?: "easy" | "medium" | "advanced";
+  collection?: string;
+  featured?: boolean;
+  breakdownStepsEn?: string[];
+  breakdownStepsZh?: string[];
+  quickTweaksEn?: string[];
+  quickTweaksZh?: string[];
+  promptSubjectEn?: string;
+  promptSubjectZh?: string;
+  promptSettingEn?: string;
+  promptSettingZh?: string;
+  promptMotionEn?: string;
+  promptMotionZh?: string;
+  promptCameraEn?: string;
+  promptCameraZh?: string;
+  promptFinishEn?: string;
+  promptFinishZh?: string;
   promptEn: string;
   promptZh: string;
   tags: string[];
@@ -524,6 +549,177 @@ const seedCommentBodies = [
   },
 ] as const;
 
+const collectionLabels = {
+  "city,miniature,stop-motion": "Trending Now",
+  "lofi,loop,cozy": "Ambient Worlds",
+  "growth,timelapse,nature": "Ready to Remix",
+  "abstract,luxury,motion": "Commercial Looks",
+  "paper,story,fantasy": "Ambient Worlds",
+  "glass,koi,art": "Commercial Looks",
+  "macro,product,industrial": "Commercial Looks",
+  "chalk,education,playful": "Ready to Remix",
+  "textile,craft,poetic": "Ambient Worlds",
+  "mood,ink,underwater": "Ambient Worlds",
+  "origami,paper,brand": "Ready to Remix",
+  "shadow,heritage,silhouette": "Trending Now",
+} as const;
+
+function titleCaseTag(tag: string) {
+  return tag
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function inferCollection(tags: string[]) {
+  const key = tags.join(",");
+  return collectionLabels[key as keyof typeof collectionLabels] ?? "Ready to Remix";
+}
+
+function inferSummary(descriptor: SeedDescriptor) {
+  return {
+    en:
+      descriptor.summaryEn ??
+      `${descriptor.titleEn} turns ${titleCaseTag(descriptor.tags[0])} language into a premium vertical short with immediately readable motion.`,
+    zh:
+      descriptor.summaryZh ??
+      `${descriptor.titleZh} 把 ${descriptor.tags[0]} 的视觉语言做成了适合竖屏传播、信息非常清楚的短片。`,
+  };
+}
+
+function inferRecommendationReason(descriptor: SeedDescriptor) {
+  return {
+    en:
+      descriptor.recommendationReasonEn ??
+      `Recommended because the first two seconds lock attention fast and the ${titleCaseTag(descriptor.tags[1] ?? descriptor.tags[0])} styling is easy to remix into a brand-ready cut.`,
+    zh:
+      descriptor.recommendationReasonZh ??
+      `推荐它，是因为前两秒抓人很快，而且 ${descriptor.tags[1] ?? descriptor.tags[0]} 的风格很容易改造成品牌可用版本。`,
+  };
+}
+
+function inferUseCases(descriptor: SeedDescriptor) {
+  return {
+    en:
+      descriptor.useCasesEn?.map((label) => ({ en: label, zh: label })) ?? [
+        { en: "Brand teaser", zh: "品牌 teaser" },
+        { en: "Social launch", zh: "社媒发布" },
+        { en: "Mood campaign", zh: "情绪向 campaign" },
+      ],
+    zh:
+      descriptor.useCasesZh?.map((label) => ({ en: label, zh: label })) ?? [
+        { en: "Brand teaser", zh: "品牌 teaser" },
+        { en: "Social launch", zh: "社媒发布" },
+        { en: "Mood campaign", zh: "情绪向 campaign" },
+      ],
+  };
+}
+
+function inferTrendLabel(descriptor: SeedDescriptor, index: number) {
+  const fallback = index % 3 === 0 ? "Fast saves" : index % 3 === 1 ? "Replay heavy" : "Creator pick";
+  const fallbackZh = index % 3 === 0 ? "收藏很快" : index % 3 === 1 ? "回看率高" : "创作者常用";
+  return {
+    en: descriptor.trendLabelEn ?? fallback,
+    zh: descriptor.trendLabelZh ?? fallbackZh,
+  };
+}
+
+function inferDifficulty(index: number, descriptor: SeedDescriptor) {
+  if (descriptor.remixDifficulty) return descriptor.remixDifficulty;
+  if (index % 3 === 0) return "easy";
+  if (index % 3 === 1) return "medium";
+  return "advanced";
+}
+
+function inferBreakdownSteps(descriptor: SeedDescriptor) {
+  return {
+    en: descriptor.breakdownStepsEn ?? [
+      `Open on a clear ${titleCaseTag(descriptor.tags[0])} visual hook.`,
+      "Hold one dominant subject instead of cutting between ideas.",
+      "Finish on a premium lighting or texture beat.",
+    ],
+    zh: descriptor.breakdownStepsZh ?? [
+      `先用清晰的 ${descriptor.tags[0]} 视觉钩子开场。`,
+      "中段保持一个主主体，不要频繁切概念。",
+      "最后落在有质感的光线或纹理收束上。",
+    ],
+  };
+}
+
+function inferQuickTweaks(descriptor: SeedDescriptor) {
+  return {
+    en: descriptor.quickTweaksEn ?? [
+      "Make it more luxury",
+      "Turn it into a product hero",
+      "Add a stronger ending beat",
+    ],
+    zh: descriptor.quickTweaksZh ?? [
+      "更奢华一点",
+      "改成产品 hero",
+      "结尾更有一击感",
+    ],
+  };
+}
+
+function inferPromptFields(descriptor: SeedDescriptor) {
+  return {
+    subject: {
+      en: descriptor.promptSubjectEn ?? descriptor.titleEn,
+      zh: descriptor.promptSubjectZh ?? descriptor.titleZh,
+    },
+    setting: {
+      en: descriptor.promptSettingEn ?? "A premium vertical frame with strong atmosphere",
+      zh: descriptor.promptSettingZh ?? "一个氛围很强的高级竖屏场景",
+    },
+    motion: {
+      en: descriptor.promptMotionEn ?? "Slow, readable motion with one dominant action",
+      zh: descriptor.promptMotionZh ?? "动作缓慢清晰，并且只有一个主动作",
+    },
+    camera: {
+      en: descriptor.promptCameraEn ?? "Elegant controlled camera movement, optimized for social replay",
+      zh: descriptor.promptCameraZh ?? "镜头运动克制优雅，适合社媒反复观看",
+    },
+    finish: {
+      en: descriptor.promptFinishEn ?? "Luxury texture, rich contrast, cinematic finishing",
+      zh: descriptor.promptFinishZh ?? "质感高级、反差丰富、成片要有电影化收尾",
+    },
+  };
+}
+
+function enrichDescriptor(descriptor: SeedDescriptor, index: number) {
+  const summary = inferSummary(descriptor);
+  const recommendationReason = inferRecommendationReason(descriptor);
+  const useCases = inferUseCases(descriptor);
+  const trendLabel = inferTrendLabel(descriptor, index);
+  const breakdownSteps = inferBreakdownSteps(descriptor);
+  const quickTweaks = inferQuickTweaks(descriptor);
+  const promptFields = inferPromptFields(descriptor);
+
+  return {
+    summary,
+    recommendationReason,
+    useCases: descriptor.useCasesEn
+      ? descriptor.useCasesEn.map((label, itemIndex) => ({
+          en: label,
+          zh: descriptor.useCasesZh?.[itemIndex] ?? label,
+        }))
+      : useCases.en,
+    trendLabel,
+    remixDifficulty: inferDifficulty(index, descriptor),
+    collection: descriptor.collection ?? inferCollection(descriptor.tags),
+    featured: descriptor.featured ?? index < 4,
+    breakdownSteps: breakdownSteps.en.map((step, itemIndex) => ({
+      en: step,
+      zh: breakdownSteps.zh[itemIndex] ?? step,
+    })),
+    quickTweaks: quickTweaks.en.map((step, itemIndex) => ({
+      en: step,
+      zh: quickTweaks.zh[itemIndex] ?? step,
+    })),
+    promptFields,
+  };
+}
+
 function createSeedComments(videoId: string) {
   return seedCommentBodies.map((body, index) => {
     const comment: VideoComment = {
@@ -539,41 +735,68 @@ function createSeedComments(videoId: string) {
   });
 }
 
-export const feedVideos: FeedVideoItem[] = descriptorPool.map((descriptor, index) => ({
-  id: `vid_${String(index + 1).padStart(2, "0")}`,
-  templateSlug: descriptor.slug,
-  title: {
-    en: descriptor.titleEn,
-    zh: descriptor.titleZh,
-  },
-  videoUrl: descriptor.videoUrl ?? "",
-  posterUrl: descriptor.posterUrl ?? "",
-  aspectMode: "portrait-9-16",
-  likesCount: 20 + index * 7,
-  commentsCount: 3 + (index % 3),
-  seedComments: 5,
-  isExternalAsset: descriptor.isExternalAsset,
-  isReady: !descriptor.isExternalAsset,
-}));
+export const feedVideos: FeedVideoItem[] = descriptorPool.map((descriptor, index) => {
+  const enriched = enrichDescriptor(descriptor, index);
 
-export const videoTemplates: VideoTemplate[] = descriptorPool.map((descriptor) => ({
-  slug: descriptor.slug,
-  title: {
-    en: descriptor.titleEn,
-    zh: descriptor.titleZh,
-  },
-  previewVideoUrl: descriptor.videoUrl ?? "",
-  posterUrl: descriptor.posterUrl ?? "",
-  defaultPrompt: {
-    en: descriptor.promptEn,
-    zh: descriptor.promptZh,
-  },
-  requestedModels: ["kling", "veo3", "seedance2"],
-  executionProvider: "kling",
-  tags: descriptor.tags,
-  isExternalAsset: descriptor.isExternalAsset,
-  isReady: !descriptor.isExternalAsset,
-}));
+  return {
+    id: `vid_${String(index + 1).padStart(2, "0")}`,
+    templateSlug: descriptor.slug,
+    title: {
+      en: descriptor.titleEn,
+      zh: descriptor.titleZh,
+    },
+    summary: enriched.summary,
+    recommendationReason: enriched.recommendationReason,
+    useCases: enriched.useCases,
+    trendLabel: enriched.trendLabel,
+    remixDifficulty: enriched.remixDifficulty,
+    collection: enriched.collection,
+    featured: enriched.featured,
+    breakdownSteps: enriched.breakdownSteps,
+    quickTweaks: enriched.quickTweaks,
+    videoUrl: descriptor.videoUrl ?? "",
+    posterUrl: descriptor.posterUrl ?? "",
+    aspectMode: "portrait-9-16",
+    likesCount: 20 + index * 7,
+    commentsCount: 3 + (index % 3),
+    seedComments: 5,
+    isExternalAsset: descriptor.isExternalAsset,
+    isReady: !descriptor.isExternalAsset && Boolean(descriptor.videoUrl && descriptor.posterUrl),
+  };
+});
+
+export const videoTemplates: VideoTemplate[] = descriptorPool.map((descriptor, index) => {
+  const enriched = enrichDescriptor(descriptor, index);
+
+  return {
+    slug: descriptor.slug,
+    title: {
+      en: descriptor.titleEn,
+      zh: descriptor.titleZh,
+    },
+    summary: enriched.summary,
+    recommendationReason: enriched.recommendationReason,
+    useCases: enriched.useCases,
+    trendLabel: enriched.trendLabel,
+    remixDifficulty: enriched.remixDifficulty,
+    collection: enriched.collection,
+    featured: enriched.featured,
+    breakdownSteps: enriched.breakdownSteps,
+    quickTweaks: enriched.quickTweaks,
+    previewVideoUrl: descriptor.videoUrl ?? "",
+    posterUrl: descriptor.posterUrl ?? "",
+    defaultPrompt: {
+      en: descriptor.promptEn,
+      zh: descriptor.promptZh,
+    },
+    promptFields: enriched.promptFields,
+    requestedModels: ["kling", "veo3", "seedance2"],
+    executionProvider: "kling",
+    tags: descriptor.tags,
+    isExternalAsset: descriptor.isExternalAsset,
+    isReady: !descriptor.isExternalAsset && Boolean(descriptor.videoUrl && descriptor.posterUrl),
+  };
+});
 
 export function makeInitialStore(): StoreShape {
   const comments = Object.fromEntries(

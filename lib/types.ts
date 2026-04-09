@@ -28,10 +28,30 @@ export type BilingualText = {
   zh: string;
 };
 
+export type PromptFieldKey =
+  | "subject"
+  | "setting"
+  | "motion"
+  | "camera"
+  | "finish";
+
+export type PromptFieldSet = Record<PromptFieldKey, BilingualText>;
+
+export type RemixDifficulty = "easy" | "medium" | "advanced";
+
 export type FeedVideoItem = {
   id: string;
   templateSlug: string;
   title: BilingualText;
+  summary: BilingualText;
+  recommendationReason: BilingualText;
+  useCases: BilingualText[];
+  trendLabel: BilingualText;
+  remixDifficulty: RemixDifficulty;
+  collection: string;
+  featured: boolean;
+  breakdownSteps: BilingualText[];
+  quickTweaks: BilingualText[];
   videoUrl: string;
   posterUrl: string;
   aspectMode: AspectMode;
@@ -45,9 +65,19 @@ export type FeedVideoItem = {
 export type VideoTemplate = {
   slug: string;
   title: BilingualText;
+  summary: BilingualText;
+  recommendationReason: BilingualText;
+  useCases: BilingualText[];
+  trendLabel: BilingualText;
+  remixDifficulty: RemixDifficulty;
+  collection: string;
+  featured: boolean;
+  breakdownSteps: BilingualText[];
+  quickTweaks: BilingualText[];
   previewVideoUrl: string;
   posterUrl: string;
   defaultPrompt: BilingualText;
+  promptFields: PromptFieldSet;
   requestedModels: RequestedModel[];
   executionProvider: ExecutionProvider;
   tags: string[];

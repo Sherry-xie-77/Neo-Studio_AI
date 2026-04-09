@@ -1,12 +1,20 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { captureClientEvent } from "@/lib/client/posthog";
 import { CreepyActionButton } from "@/components/creepy-action-button";
 import { AVAILABLE_MODELS, TRACKING_EVENTS } from "@/lib/constants";
-import { type GenerationRecord, type Locale, type RequestedModel, type VideoTemplate } from "@/lib/types";
+import {
+  type GenerationRecord,
+  type Locale,
+  type PromptFieldKey,
+  type RequestedModel,
+  type VideoTemplate,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type CreateClientProps = {
@@ -14,6 +22,17 @@ type CreateClientProps = {
   templates: VideoTemplate[];
   initialTemplateSlug?: string;
   fromVideoId?: string;
+  initialModel?: RequestedModel;
+};
+
+type PromptFieldsState = Record<PromptFieldKey, string>;
+
+const promptLabels: Record<PromptFieldKey, Record<Locale, string>> = {
+  subject: { en: "Subject", zh: "主体" },
+  setting: { en: "Setting", zh: "场景" },
+  motion: { en: "Motion", zh: "动作" },
+  camera: { en: "Camera", zh: "镜头" },
+  finish: { en: "Finish", zh: "成片质感" },
 };
 
 const scriptModels = ["Gemini 3.1 Pro", "Claude", "GPT"] as const;
@@ -32,12 +51,34 @@ function getSessionId() {
   return next;
 }
 
+function buildPromptFromFields(fields: PromptFieldsState) {
+  return [fields.subject, fields.setting, fields.motion, fields.camera, fields.finish]
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
+function deriveFieldState(template: VideoTemplate, locale: Locale): PromptFieldsState {
+  return {
+    subject: template.promptFields.subject[locale],
+    setting: template.promptFields.setting[locale],
+    motion: template.promptFields.motion[locale],
+    camera: template.promptFields.camera[locale],
+    finish: template.promptFields.finish[locale],
+  };
+}
+
 export function CreateClient({
   locale,
   templates,
   initialTemplateSlug,
   fromVideoId,
+  initialModel,
 }: CreateClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const resolvedTemplate =
     templates.find((template) => template.slug === initialTemplateSlug && template.isReady) ??
     templates.find((template) => template.isReady) ??
@@ -61,6 +102,20 @@ export function CreateClient({
   const [generation, setGeneration] = useState<GenerationRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isPolling, setIsPolling] = useState(false);
+
+  const selectedTemplate =
+    templates.find((template) => template.slug === selectedSlug) ?? resolvedTemplate;
+
+  const [promptFields, setPromptFields] = useState<PromptFieldsState>(() =>
+    selectedTemplate ? deriveFieldState(selectedTemplate, locale) : {
+      subject: "",
+      setting: "",
+      motion: "",
+      camera: "",
+      finish: "",
+    },
+  );
 
   useEffect(() => {
     captureClientEvent(TRACKING_EVENTS.createOpen, {
@@ -71,13 +126,63 @@ export function CreateClient({
     });
   }, [fromVideoId, locale, resolvedTemplate?.slug, sessionId]);
 
-  const selectedTemplate =
-    templates.find((template) => template.slug === selectedSlug) ?? resolvedTemplate;
+  useEffect(() => {
+    if (!selectedTemplate) return;
+    setPromptFields(deriveFieldState(selectedTemplate, locale));
+  }, [locale, selectedTemplate]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("lang", locale);
+    if (selectedSlug) params.set("template", selectedSlug);
+    if (selectedModel) params.set("model", selectedModel);
+    if (fromVideoId) params.set("from", fromVideoId);
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [fromVideoId, locale, pathname, router, searchParams, selectedModel, selectedSlug]);
+
+  useEffect(() => {
+    if (!generation || !["queued", "generating"].includes(generation.status)) return;
+
+    let cancelled = false;
+    setIsPolling(true);
+
+    const poll = window.setInterval(async () => {
+      const response = await fetch(`/api/generations/${generation.id}`);
+      if (!response.ok) return;
+      const payload = (await response.json()) as { generation: GenerationRecord };
+      if (cancelled) return;
+
+      setGeneration(payload.generation);
+      if (!["queued", "generating"].includes(payload.generation.status)) {
+        window.clearInterval(poll);
+        setIsPolling(false);
+      }
+    }, 1800);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(poll);
+      setIsPolling(false);
+    };
+  }, [generation]);
 
   const readyTemplates = useMemo(
     () => templates.filter((template) => template.isReady),
     [templates],
   );
+
+  const combinedPrompt = useMemo(() => buildPromptFromFields(promptFields), [promptFields]);
+
+  const similarTemplates = useMemo(() => {
+    if (!selectedTemplate) return [];
+    return readyTemplates
+      .filter((template) => template.slug !== selectedTemplate.slug)
+      .filter((template) =>
+        template.tags.some((tag) => selectedTemplate.tags.includes(tag)),
+      )
+      .slice(0, 4);
+  }, [readyTemplates, selectedTemplate]);
 
   async function submitGeneration() {
     if (!selectedTemplate) return;
@@ -93,10 +198,11 @@ export function CreateClient({
           sessionId,
           templateSlug: selectedTemplate.slug,
           requestedModel: selectedModel,
-          promptOverride,
+          promptOverride: combinedPrompt,
         }),
       });
 
+      await new Promise((resolve) => window.setTimeout(resolve, 280));
       const payload = (await response.json()) as {
         error?: string;
         generation?: GenerationRecord;
@@ -118,6 +224,20 @@ export function CreateClient({
       });
     });
   }
+
+  function applyQuickTweak(value: string) {
+    setPromptFields((current) => ({
+      ...current,
+      finish: `${current.finish}${current.finish ? "，" : ""}${value}`,
+    }));
+  }
+
+  function resetPrompt() {
+    if (!selectedTemplate) return;
+    setPromptFields(deriveFieldState(selectedTemplate, locale));
+  }
+
+  if (!selectedTemplate) return null;
 
   return (
     <div className="space-y-6">
@@ -394,7 +514,7 @@ export function CreateClient({
                           : "The generation is queued and waiting for a result."}
                   </p>
                 </div>
-              ) : null}
+              ))}
             </div>
           </section>
 

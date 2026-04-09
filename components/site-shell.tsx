@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { type ReactNode } from "react";
 
 import { LiquidForceField } from "@/components/liquid-force-field";
