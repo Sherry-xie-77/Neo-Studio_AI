@@ -2,7 +2,7 @@
 
 import { Heart, MessageCircle } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { captureClientEvent } from "@/lib/client/posthog";
 import { CreepyActionButton } from "@/components/creepy-action-button";
@@ -39,33 +39,13 @@ function getSessionId() {
   return next;
 }
 
-function buildTagRail(videos: FeedVideoItem[], locale: Locale) {
-  const tags = new Set<string>();
-  videos.forEach((video) => {
-    video.useCases?.forEach((useCase) => {
-      tags.add(useCase[locale]);
-    });
-  });
-
-  return [
-    { value: "all", label: locale === "zh" ? "推荐" : "For you" },
-    ...Array.from(tags).slice(0, 8).map((tag) => ({
-      value: tag,
-      label: tag,
-    })),
-  ];
-}
-
 export function FeedClient({
   locale,
   initialVideos,
   initialComments,
   initialFilters,
 }: FeedClientProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
+  void initialFilters;
   const [sessionId] = useState(() =>
     typeof window === "undefined" ? "session_pending" : getSessionId(),
   );
@@ -84,6 +64,7 @@ export function FeedClient({
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [cursorScale, setCursorScale] = useState(1);
   const [scrollY, setScrollY] = useState(0);
+  const lastTriggerButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     captureClientEvent(TRACKING_EVENTS.feedView, {
@@ -193,7 +174,7 @@ export function FeedClient({
         [video.id]: payload.comments,
       }));
     }
-    lastTriggerRef.current = trigger ?? null;
+    lastTriggerButtonRef.current = trigger ?? null;
     setCommentTarget(video);
     captureClientEvent(TRACKING_EVENTS.commentPanelOpen, {
       sessionId,
@@ -204,7 +185,7 @@ export function FeedClient({
   function closeComments() {
     setCommentTarget(null);
     window.setTimeout(() => {
-      lastTriggerRef.current?.focus();
+      lastTriggerButtonRef.current?.focus();
     }, 30);
   }
 
@@ -378,7 +359,7 @@ export function FeedClient({
             <JellyButton
               type="button"
               tone="ghost"
-              onClick={() => setCommentTarget(null)}
+              onClick={closeComments}
               className="text-sm text-[#114f99]"
             >
               {locale === "zh" ? "关闭" : "Close"}
@@ -637,7 +618,6 @@ function FeedVideoCard({
   onActivate: () => void;
   onCursorScaleChange: (scale: number) => void;
 }) {
-  const commentButtonRef = useRef<HTMLButtonElement | null>(null);
   const previewType = video.videoUrl.endsWith(".ogv") ? "video/ogg" : "video/webm";
   const [tiltStyle, setTiltStyle] = useState({
     rotateX: 0,
@@ -781,7 +761,6 @@ function FeedVideoCard({
               </button>
 
               <button
-                ref={commentButtonRef}
                 type="button"
                 onClick={onOpenComments}
                 className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-[var(--avp-border)] bg-[rgba(0,26,66,0.48)] px-3 py-2 text-xs font-medium text-[var(--avp-text)] transition hover:border-[var(--avp-border-strong)] hover:bg-[rgba(0,26,66,0.66)]"
@@ -806,121 +785,5 @@ function FeedVideoCard({
         </div>
       </div>
     </article>
-  );
-}
-
-function CommentSheet({
-  locale,
-  commentTarget,
-  commentList,
-  commentState,
-  isCommentBusy,
-  onClose,
-  onStateChange,
-  onSubmit,
-}: {
-  locale: Locale;
-  commentTarget: FeedVideoItem | null;
-  commentList: VideoComment[];
-  commentState: CommentState;
-  isCommentBusy: boolean;
-  onClose: () => void;
-  onStateChange: React.Dispatch<React.SetStateAction<CommentState>>;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>;
-}) {
-  return (
-    <div
-      className={cn(
-        "fixed inset-0 z-50 transition",
-        commentTarget ? "pointer-events-auto bg-black/55" : "pointer-events-none bg-black/0",
-      )}
-      aria-hidden={commentTarget ? undefined : true}
-    >
-      <div
-        className={cn(
-          "absolute inset-x-0 bottom-0 w-full transition duration-300 xl:inset-y-0 xl:left-auto xl:right-4 xl:top-24 xl:max-w-[420px]",
-          commentTarget ? "translate-y-0 opacity-100 xl:translate-x-0" : "translate-y-full opacity-0 xl:translate-x-8 xl:translate-y-0",
-        )}
-      >
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={locale === "zh" ? "评论面板" : "Comments panel"}
-          className="neo-panel neo-scrollbar max-h-[82vh] overflow-y-auto rounded-b-none p-5 pb-8 sm:p-6 xl:h-[calc(100vh-8rem)] xl:rounded-[2rem]"
-        >
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--text-soft)]">
-                {locale === "zh" ? "评论" : "Comments"}
-              </p>
-              <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">
-                {commentTarget?.title[locale] ?? ""}
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="neo-button-secondary inline-flex min-w-[44px] items-center justify-center px-3"
-              aria-label={locale === "zh" ? "关闭评论" : "Close comments"}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="neo-scrollbar mb-5 max-h-[42vh] space-y-3 overflow-y-auto pr-1 xl:max-h-[46vh]">
-            {commentList.map((comment) => (
-              <article key={comment.id} className="neo-card p-4">
-                <div className="mb-2 flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">
-                  <span>{comment.nickname}</span>
-                  {comment.seed ? (
-                    <span className="rounded-full border border-[var(--line)] bg-[var(--gold-soft)] px-2 py-1 text-[10px] text-[var(--gold)]">
-                      {locale === "zh" ? "种子" : "Seed"}
-                    </span>
-                  ) : null}
-                </div>
-                <p className="text-sm leading-7 text-[var(--text-muted)]">{comment.body}</p>
-              </article>
-            ))}
-          </div>
-
-          <form onSubmit={onSubmit} className="grid gap-3">
-            <input
-              value={commentState.nickname}
-              onChange={(event) =>
-                onStateChange((current) => ({
-                  ...current,
-                  nickname: event.target.value,
-                }))
-              }
-              className="neo-input"
-              placeholder={locale === "zh" ? "昵称" : "Nickname"}
-              autoComplete="nickname"
-              required
-            />
-            <textarea
-              value={commentState.body}
-              onChange={(event) =>
-                onStateChange((current) => ({
-                  ...current,
-                  body: event.target.value,
-                }))
-              }
-              className="neo-input min-h-28 resize-y"
-              placeholder={locale === "zh" ? "说点什么…" : "Say something…"}
-              required
-            />
-            <button type="submit" disabled={isCommentBusy} className="neo-button-primary px-5 text-sm font-semibold disabled:opacity-60">
-              {isCommentBusy
-                ? locale === "zh"
-                  ? "发送中…"
-                  : "Sending…"
-                : locale === "zh"
-                  ? "发送"
-                  : "Post"}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
   );
 }

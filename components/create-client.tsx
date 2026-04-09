@@ -1,20 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { captureClientEvent } from "@/lib/client/posthog";
 import { CreepyActionButton } from "@/components/creepy-action-button";
 import { AVAILABLE_MODELS, TRACKING_EVENTS } from "@/lib/constants";
-import {
-  type GenerationRecord,
-  type Locale,
-  type PromptFieldKey,
-  type RequestedModel,
-  type VideoTemplate,
-} from "@/lib/types";
+import { type GenerationRecord, type Locale, type RequestedModel, type VideoTemplate } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type CreateClientProps = {
@@ -23,16 +16,6 @@ type CreateClientProps = {
   initialTemplateSlug?: string;
   fromVideoId?: string;
   initialModel?: RequestedModel;
-};
-
-type PromptFieldsState = Record<PromptFieldKey, string>;
-
-const promptLabels: Record<PromptFieldKey, Record<Locale, string>> = {
-  subject: { en: "Subject", zh: "主体" },
-  setting: { en: "Setting", zh: "场景" },
-  motion: { en: "Motion", zh: "动作" },
-  camera: { en: "Camera", zh: "镜头" },
-  finish: { en: "Finish", zh: "成片质感" },
 };
 
 const scriptModels = ["Gemini 3.1 Pro", "Claude", "GPT"] as const;
@@ -49,23 +32,6 @@ function getSessionId() {
   const next = `sess_${crypto.randomUUID()}`;
   window.localStorage.setItem(key, next);
   return next;
-}
-
-function buildPromptFromFields(fields: PromptFieldsState) {
-  return [fields.subject, fields.setting, fields.motion, fields.camera, fields.finish]
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .join(", ");
-}
-
-function deriveFieldState(template: VideoTemplate, locale: Locale): PromptFieldsState {
-  return {
-    subject: template.promptFields.subject[locale],
-    setting: template.promptFields.setting[locale],
-    motion: template.promptFields.motion[locale],
-    camera: template.promptFields.camera[locale],
-    finish: template.promptFields.finish[locale],
-  };
 }
 
 export function CreateClient({
@@ -88,10 +54,12 @@ export function CreateClient({
     typeof window === "undefined" ? "session_pending" : getSessionId(),
   );
   const [selectedSlug, setSelectedSlug] = useState(resolvedTemplate?.slug ?? "");
-  const [selectedModel, setSelectedModel] = useState<RequestedModel>("kling");
-  const [promptOverride, setPromptOverride] = useState(
-    resolvedTemplate?.defaultPrompt[locale] ?? "",
-  );
+  const [selectedModel, setSelectedModel] = useState<RequestedModel>(initialModel ?? "kling");
+  const [promptState, setPromptState] = useState(() => ({
+    templateSlug: resolvedTemplate?.slug ?? "",
+    locale,
+    value: resolvedTemplate?.defaultPrompt[locale] ?? "",
+  }));
   const [createMode, setCreateMode] = useState<"template" | "free">("template");
   const [selectedScriptModel, setSelectedScriptModel] = useState<(typeof scriptModels)[number]>("Gemini 3.1 Pro");
   const [selectedImageModel, setSelectedImageModel] = useState<(typeof imageModels)[number]>("nano-banana");
@@ -102,20 +70,14 @@ export function CreateClient({
   const [generation, setGeneration] = useState<GenerationRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [isPolling, setIsPolling] = useState(false);
 
   const selectedTemplate =
     templates.find((template) => template.slug === selectedSlug) ?? resolvedTemplate;
-
-  const [promptFields, setPromptFields] = useState<PromptFieldsState>(() =>
-    selectedTemplate ? deriveFieldState(selectedTemplate, locale) : {
-      subject: "",
-      setting: "",
-      motion: "",
-      camera: "",
-      finish: "",
-    },
-  );
+  const defaultPrompt = selectedTemplate?.defaultPrompt[locale] ?? "";
+  const promptOverride =
+    promptState.templateSlug === selectedTemplate?.slug && promptState.locale === locale
+      ? promptState.value
+      : defaultPrompt;
 
   useEffect(() => {
     captureClientEvent(TRACKING_EVENTS.createOpen, {
@@ -125,11 +87,6 @@ export function CreateClient({
       locale,
     });
   }, [fromVideoId, locale, resolvedTemplate?.slug, sessionId]);
-
-  useEffect(() => {
-    if (!selectedTemplate) return;
-    setPromptFields(deriveFieldState(selectedTemplate, locale));
-  }, [locale, selectedTemplate]);
 
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -145,7 +102,6 @@ export function CreateClient({
     if (!generation || !["queued", "generating"].includes(generation.status)) return;
 
     let cancelled = false;
-    setIsPolling(true);
 
     const poll = window.setInterval(async () => {
       const response = await fetch(`/api/generations/${generation.id}`);
@@ -156,14 +112,12 @@ export function CreateClient({
       setGeneration(payload.generation);
       if (!["queued", "generating"].includes(payload.generation.status)) {
         window.clearInterval(poll);
-        setIsPolling(false);
       }
     }, 1800);
 
     return () => {
       cancelled = true;
       window.clearInterval(poll);
-      setIsPolling(false);
     };
   }, [generation]);
 
@@ -171,18 +125,6 @@ export function CreateClient({
     () => templates.filter((template) => template.isReady),
     [templates],
   );
-
-  const combinedPrompt = useMemo(() => buildPromptFromFields(promptFields), [promptFields]);
-
-  const similarTemplates = useMemo(() => {
-    if (!selectedTemplate) return [];
-    return readyTemplates
-      .filter((template) => template.slug !== selectedTemplate.slug)
-      .filter((template) =>
-        template.tags.some((tag) => selectedTemplate.tags.includes(tag)),
-      )
-      .slice(0, 4);
-  }, [readyTemplates, selectedTemplate]);
 
   async function submitGeneration() {
     if (!selectedTemplate) return;
@@ -198,7 +140,7 @@ export function CreateClient({
           sessionId,
           templateSlug: selectedTemplate.slug,
           requestedModel: selectedModel,
-          promptOverride: combinedPrompt,
+          promptOverride,
         }),
       });
 
@@ -223,18 +165,6 @@ export function CreateClient({
         requestedModel: selectedModel,
       });
     });
-  }
-
-  function applyQuickTweak(value: string) {
-    setPromptFields((current) => ({
-      ...current,
-      finish: `${current.finish}${current.finish ? "，" : ""}${value}`,
-    }));
-  }
-
-  function resetPrompt() {
-    if (!selectedTemplate) return;
-    setPromptFields(deriveFieldState(selectedTemplate, locale));
   }
 
   if (!selectedTemplate) return null;
@@ -434,7 +364,13 @@ export function CreateClient({
                 </span>
                 <textarea
                   value={promptOverride}
-                  onChange={(event) => setPromptOverride(event.target.value)}
+                  onChange={(event) =>
+                    setPromptState({
+                      templateSlug: selectedTemplate.slug,
+                      locale,
+                      value: event.target.value,
+                    })
+                  }
                   className="min-h-40 w-full resize-y rounded-[24px] border border-[var(--avp-border)] bg-[rgba(0,26,66,0.42)] px-4 py-4 text-sm leading-7 text-[var(--avp-text)] outline-none transition placeholder:text-[var(--avp-text-muted)] focus:border-[var(--avp-border-strong)]"
                 />
               </label>
@@ -514,7 +450,7 @@ export function CreateClient({
                           : "The generation is queued and waiting for a result."}
                   </p>
                 </div>
-              ))}
+              ) : null}
             </div>
           </section>
 
@@ -534,7 +470,6 @@ export function CreateClient({
                   type="button"
                   onClick={() => {
                     setSelectedSlug(template.slug);
-                    setPromptOverride(template.defaultPrompt[locale]);
                     captureClientEvent(TRACKING_EVENTS.templateSwitch, {
                       sessionId,
                       templateSlug: template.slug,
