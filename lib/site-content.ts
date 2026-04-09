@@ -2,22 +2,22 @@ import { type BilingualText } from "@/lib/types";
 
 export const feedHeroCopy = {
   title: {
-    en: "AI videos you can scroll, like, comment, and remake instantly.",
-    zh: "像刷抖音和小红书一样刷 AI 视频，然后立刻一键复刻。",
+    en: "Browse premium AI shorts, then move into remake mode in one click.",
+    zh: "先浏览高级感 AI 短片，再一键进入复刻工作流。",
   },
   body: {
-    en: "Hover to preview on desktop. Scroll to autoplay on mobile. Tap a card to like, open comments, or jump straight into remake mode.",
-    zh: "桌面端悬停预览，移动端滑到视口自动播放。点卡片就能点赞、看评论、直接进入复刻创作。",
+    en: "AI Video Pro combines a cinematic discovery feed with a fast production workspace, so teams can review, select, and regenerate short-form concepts without leaving the browser.",
+    zh: "AI Video Pro 把短片发现流和生成工作台合在一个站内，让团队可以在浏览器里直接完成浏览、筛选和再生成。",
   },
 } satisfies Record<string, BilingualText>;
 
 export const createPageCopy = {
   title: {
-    en: "Remake a video template in one page.",
-    zh: "在一个页面里一键复刻视频模板。",
+    en: "Control the template, prompt, and output path from one studio surface.",
+    zh: "在一个工作台里统一控制模板、提示词和输出路径。",
   },
   body: {
-    en: "Pick a template, switch models, adjust the main prompt, and submit generation without leaving the page.",
-    zh: "选模板、切模型、改主提示词，然后在同一页直接提交生成。",
+    en: "Select a base template, tune the prompt, and push a new job through the generation pipeline with a cleaner production-style interface.",
+    zh: "选择基础模板，调整提示词，再用更接近生产工具的界面把任务送进生成链路。",
   },
 } satisfies Record<string, BilingualText>;

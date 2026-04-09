@@ -1,7 +1,7 @@
 import { type RequestedModel } from "@/lib/types";
 
-export const APP_NAME = "Neo-Studio";
-export const APP_TAGLINE = "AI remix video feed";
+export const APP_NAME = "AI Video Pro";
+export const APP_TAGLINE = "Cinematic AI video studio";
 export const APP_DOMAIN =
   process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
