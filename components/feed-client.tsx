@@ -238,7 +238,7 @@ export function FeedClient({
     <>
       {showWatchCursor ? (
         <div
-          className="pointer-events-none fixed z-[70] hidden h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/75 text-sm font-semibold uppercase tracking-[0.18em] text-[#001a42] mix-blend-screen transition duration-150 md:flex"
+          className="pointer-events-none fixed z-[70] hidden h-18 w-18 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/75 text-xs font-semibold uppercase tracking-[0.16em] text-[#001a42] mix-blend-screen transition duration-150 md:flex"
           style={{
             left: `${cursorPosition.x}px`,
             top: `${cursorPosition.y}px`,

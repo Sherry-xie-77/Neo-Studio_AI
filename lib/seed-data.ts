@@ -47,8 +47,8 @@ const descriptorPool: SeedDescriptor[] = [
     promptZh:
       "一个桌面上的乐高尺度未来城市，微型磁悬浮汽车在楼宇之间滑行，窗户逐个亮起，整体像停格动画一样清晰可读、很有电影感。",
     tags: ["city", "miniature", "stop-motion"],
-    videoUrl: "/media/showcase/miniature-city.webm",
-    posterUrl: "/media/showcase/miniature-city.jpg",
+    videoUrl: "/media/share/placeholder.svg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {
@@ -60,8 +60,8 @@ const descriptorPool: SeedDescriptor[] = [
     promptZh:
       "一个黄昏时分的 2D lo-fi 卧室，女孩写字时轻轻点头，茶杯热气升腾，雨滴从窗上滑落，整体是很平静的循环氛围。",
     tags: ["lofi", "loop", "cozy"],
-    videoUrl: "/media/showcase/lofi-bedroom.webm",
-    posterUrl: "/media/showcase/lofi-bedroom.jpg",
+    videoUrl: "/media/share/placeholder.svg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {
@@ -73,8 +73,8 @@ const descriptorPool: SeedDescriptor[] = [
     promptZh:
       "一颗拟人化的小种子从泥土里钻出，并在一个连续镜头里迅速长成大树，氛围温暖治愈，整体是干净的风格化生长动画。",
     tags: ["growth", "timelapse", "nature"],
-    videoUrl: "/media/showcase/seed-tree.webm",
-    posterUrl: "/media/showcase/seed-tree.jpg",
+    videoUrl: "/media/share/placeholder.svg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {
@@ -86,8 +86,8 @@ const descriptorPool: SeedDescriptor[] = [
     promptZh:
       "多层半透明虹彩丝带漂浮在黑暗空间里，像缓慢海浪一样交织流动，是一种奢华又极简的动态设计。",
     tags: ["abstract", "luxury", "motion"],
-    videoUrl: "/media/showcase/silk-ribbons.webm",
-    posterUrl: "/media/showcase/silk-ribbons.jpg",
+    videoUrl: "/media/share/placeholder.svg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {
@@ -99,8 +99,8 @@ const descriptorPool: SeedDescriptor[] = [
     promptZh:
       "一本插画立体故事书在木桌上自动打开，纸质森林和小房子从书页中升起，带着细腻的纸张手工质感。",
     tags: ["paper", "story", "fantasy"],
-    videoUrl: "/media/showcase/storybook.ogv",
-    posterUrl: "/media/showcase/storybook.jpg",
+    videoUrl: "/media/share/placeholder.svg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {
@@ -112,8 +112,8 @@ const descriptorPool: SeedDescriptor[] = [
     promptZh:
       "由发光彩色玻璃拼成的锦鲤在梦境般的玻璃池中漂浮，玻璃接缝发光，折射光在画面中优雅流动。",
     tags: ["glass", "koi", "art"],
-    videoUrl: "/media/showcase/koi-glass.webm",
-    posterUrl: "/media/showcase/koi-glass.jpg",
+    videoUrl: "/media/share/placeholder.svg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {
@@ -125,8 +125,8 @@ const descriptorPool: SeedDescriptor[] = [
     promptZh:
       "一个精密机械装置的微距镜头，黄铜质感细腻，小齿轮轻轻联动，整体像高级工业广告片。",
     tags: ["macro", "product", "industrial"],
-    videoUrl: "/media/showcase/clockwork.webm",
-    posterUrl: "/media/showcase/clockwork.jpg",
+    videoUrl: "/media/share/placeholder.svg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {
@@ -138,8 +138,8 @@ const descriptorPool: SeedDescriptor[] = [
     promptZh:
       "一个手绘粉笔宇宙在黑板上逐渐活起来，行星和星座被粉笔线条勾勒出来，带着粉尘感和轻松的教育氛围。",
     tags: ["chalk", "education", "playful"],
-    videoUrl: "/media/showcase/chalk-cosmos.ogv",
-    posterUrl: "/media/showcase/chalk-cosmos.jpg",
+    videoUrl: "/media/share/placeholder.svg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {
@@ -151,8 +151,8 @@ const descriptorPool: SeedDescriptor[] = [
     promptZh:
       "一个手工刺绣山河动画，缝线做出的山脉和云朵像布料在呼吸一样轻轻移动，整体诗意又有触感。",
     tags: ["textile", "craft", "poetic"],
-    videoUrl: "/media/showcase/embroidered.webm",
-    posterUrl: "/media/showcase/embroidered.jpg",
+    videoUrl: "/media/share/placeholder.svg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {
@@ -164,8 +164,8 @@ const descriptorPool: SeedDescriptor[] = [
     promptZh:
       "梦境般的水母在墨迹流动的空间中展开，动作柔和漂浮，很适合情绪感很强的内容流。",
     tags: ["mood", "ink", "underwater"],
-    videoUrl: "/media/showcase/jellyfish.webm",
-    posterUrl: "/media/showcase/jellyfish.jpg",
+    videoUrl: "/media/share/placeholder.svg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {
@@ -177,8 +177,8 @@ const descriptorPool: SeedDescriptor[] = [
     promptZh:
       "一只折纸海洋生物在极简纸海中滑行，每次摆动都保留清晰的折纸几何感，整体干净而诗意。",
     tags: ["origami", "paper", "brand"],
-    videoUrl: "/media/showcase/origami.webm",
-    posterUrl: "/media/showcase/origami.jpg",
+    videoUrl: "/media/share/placeholder.svg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {
@@ -191,7 +191,7 @@ const descriptorPool: SeedDescriptor[] = [
       "一个月夜沙漠驼队被做成传统皮影戏，剪纸人物和骆驼在发光幕布上缓缓移动。",
     tags: ["shadow", "heritage", "silhouette"],
     videoUrl: undefined,
-    posterUrl: "/media/showcase/storybook.jpg",
+    posterUrl: "/media/share/placeholder.svg",
     isExternalAsset: false,
   },
   {

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#071736"/>
+      <stop offset="45%" stop-color="#0d57bd"/>
+      <stop offset="100%" stop-color="#61c8ff"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(760 420) rotate(132) scale(780 620)">
+      <stop stop-color="white" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#bg)"/>
+  <rect width="1080" height="1920" fill="url(#glow)"/>
+  <circle cx="230" cy="360" r="150" fill="white" fill-opacity="0.10"/>
+  <circle cx="845" cy="1450" r="210" fill="white" fill-opacity="0.08"/>
+  <rect x="90" y="96" width="900" height="1728" rx="48" fill="#03122E" fill-opacity="0.26" stroke="white" stroke-opacity="0.14"/>
+  <text x="120" y="260" fill="white" fill-opacity="0.82" font-family="Arial, Helvetica, sans-serif" font-size="44" letter-spacing="8">AI VIDEO PRO</text>
+  <text x="120" y="980" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="96" font-weight="700">Preview Asset</text>
+  <text x="120" y="1080" fill="white" fill-opacity="0.80" font-family="Arial, Helvetica, sans-serif" font-size="44">Front-end structure and styling demo</text>
+  <text x="120" y="1180" fill="white" fill-opacity="0.62" font-family="Arial, Helvetica, sans-serif" font-size="34">Media is temporarily replaced for sharing.</text>
+</svg>
