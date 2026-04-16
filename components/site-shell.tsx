@@ -20,7 +20,7 @@ export function SiteShell({
   return (
     <div className="min-h-screen text-[var(--avp-text)]">
       <LiquidForceField />
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,153,255,0.22),transparent_24%),radial-gradient(circle_at_top_right,rgba(0,73,187,0.26),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_18%)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,153,255,0.12),transparent_24%),radial-gradient(circle_at_top_right,rgba(0,73,187,0.16),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.025),transparent_18%)]" />
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1680px] flex-col px-4 pb-10 pt-5 sm:px-7 lg:px-10">
         <header className="mb-8 rounded-[26px] border border-[rgba(165,215,255,0.14)] bg-[rgba(6,18,44,0.66)] px-4 py-4 shadow-[0_22px_60px_rgba(0,0,0,0.24)] backdrop-blur-xl sm:px-8 lg:mb-10 lg:grid lg:grid-cols-[420px_minmax(0,1fr)_112px] lg:items-center lg:gap-6 lg:px-6">
           <div className="mb-4 flex items-center justify-between gap-3 lg:mb-0">

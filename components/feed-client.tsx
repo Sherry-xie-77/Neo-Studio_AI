@@ -61,10 +61,12 @@ export function FeedClient({
   const [isCommentBusy, setIsCommentBusy] = useState(false);
   const [activeVideoId, setActiveVideoId] = useState(initialVideos[0]?.id ?? "");
   const [showWatchCursor, setShowWatchCursor] = useState(false);
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [cursorScale, setCursorScale] = useState(1);
   const [scrollY, setScrollY] = useState(0);
   const lastTriggerButtonRef = useRef<HTMLButtonElement | null>(null);
+  const watchCursorRef = useRef<HTMLDivElement | null>(null);
+  const cursorPositionRef = useRef({ x: 0, y: 0 });
+  const cursorTrackingRef = useRef(false);
 
   useEffect(() => {
     captureClientEvent(TRACKING_EVENTS.feedView, {
@@ -116,6 +118,36 @@ export function FeedClient({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  function updateCursorPosition(x: number, y: number) {
+    cursorPositionRef.current = { x, y };
+    const cursor = watchCursorRef.current;
+    if (!cursor) return;
+    cursor.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+  }
+
+  useEffect(() => {
+    if (!showWatchCursor) return;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (!cursorTrackingRef.current) return;
+      updateCursorPosition(event.clientX, event.clientY);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+    };
+  }, [showWatchCursor]);
+
+  useEffect(() => {
+    const cursor = watchCursorRef.current;
+    if (!cursor) return;
+
+    const { x, y } = cursorPositionRef.current;
+    cursor.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+  }, [showWatchCursor]);
 
   const commentList = useMemo(
     () => (commentTarget ? commentsByVideo[commentTarget.id] ?? [] : []),
@@ -238,15 +270,20 @@ export function FeedClient({
     <>
       {showWatchCursor ? (
         <div
-          className="pointer-events-none fixed z-[70] hidden h-18 w-18 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/75 text-xs font-semibold uppercase tracking-[0.16em] text-[#001a42] mix-blend-screen transition duration-150 md:flex"
+          ref={watchCursorRef}
+          className="pointer-events-none fixed left-0 top-0 z-[70] hidden will-change-transform md:block"
           style={{
-            left: `${cursorPosition.x}px`,
-            top: `${cursorPosition.y}px`,
             opacity: activeVideo ? 1 : 0,
-            transform: `translate(-50%, -50%) scale(${cursorScale})`,
           }}
         >
-          WATCH
+          <div
+            className="flex h-18 w-18 items-center justify-center rounded-full border border-white/15 bg-white/75 text-xs font-semibold uppercase tracking-[0.16em] text-[#001a42] mix-blend-screen transition-transform duration-75 will-change-transform"
+            style={{
+              transform: `scale(${cursorScale})`,
+            }}
+          >
+            WATCH
+          </div>
         </div>
       ) : null}
 
@@ -293,12 +330,13 @@ export function FeedClient({
           "mb-12 grid grid-cols-1 gap-5 pb-16 md:grid-cols-[0.96fr_1.04fr] md:gap-4 md:pb-20",
           showWatchCursor ? "cursor-none" : "",
         )}
-        onMouseMove={(event) => {
-          if (!showWatchCursor) return;
-          setCursorPosition({ x: event.clientX, y: event.clientY });
+        onPointerEnter={(event) => {
+          cursorTrackingRef.current = true;
+          updateCursorPosition(event.clientX, event.clientY);
+          setCursorScale(1);
         }}
-        onMouseEnter={() => setCursorScale(1)}
         onMouseLeave={() => {
+          cursorTrackingRef.current = false;
           setCursorScale(1);
         }}
       >
@@ -529,7 +567,7 @@ function FeaturedCaseCard({
   featuredCount: number;
 }) {
   return (
-    <article className="grid h-full grid-rows-[auto_auto_auto_1fr_auto] rounded-[26px] border border-[rgba(165,215,255,0.16)] bg-[rgba(7,17,40,0.56)] p-5 shadow-[0_22px_50px_rgba(0,0,0,0.2)] backdrop-blur-xl">
+    <article className="grid h-full grid-rows-[auto_auto_auto_1fr] rounded-[26px] border border-[rgba(165,215,255,0.16)] bg-[rgba(7,17,40,0.56)] p-5 shadow-[0_22px_50px_rgba(0,0,0,0.2)] backdrop-blur-xl">
       <div className="relative mb-5 h-20 overflow-hidden rounded-[18px]">
         <Image
           src={video.posterUrl}
@@ -587,14 +625,6 @@ function FeaturedCaseCard({
         ))}
       </div>
 
-      <div className="mt-auto flex justify-end">
-        <JellyButton
-          href={`/create?template=${video.templateSlug}&from=${video.id}&lang=${locale}`}
-          className="min-w-[120px]"
-        >
-          {locale === "zh" ? "View" : "View"}
-        </JellyButton>
-      </div>
     </article>
   );
 }
@@ -772,15 +802,26 @@ function FeedVideoCard({
               </button>
             </div>
 
-            <CreepyActionButton
-              href={`/create?template=${video.templateSlug}&from=${video.id}&lang=${locale}`}
-              intensity="subtle"
-              className="pointer-events-auto inline-flex items-center gap-2 text-sm"
-              onMouseEnter={() => onCursorScaleChange(1.6)}
-              onMouseLeave={() => onCursorScaleChange(1.2)}
-            >
-              <span>{locale === "zh" ? "进入工作台" : "Open studio"}</span>
-            </CreepyActionButton>
+            <div className="flex items-center gap-2">
+              <JellyButton
+                href={`/create?template=${video.templateSlug}&from=${video.id}&lang=${locale}`}
+                tone="ghost"
+                className="pointer-events-auto min-w-[110px]"
+                onMouseEnter={() => onCursorScaleChange(1.5)}
+                onMouseLeave={() => onCursorScaleChange(1.2)}
+              >
+                {locale === "zh" ? "工作台" : "Studio"}
+              </JellyButton>
+              <CreepyActionButton
+                href={`/watch/${video.id}?lang=${locale}`}
+                intensity="subtle"
+                className="pointer-events-auto inline-flex items-center gap-2 text-sm"
+                onMouseEnter={() => onCursorScaleChange(1.6)}
+                onMouseLeave={() => onCursorScaleChange(1.2)}
+              >
+                <span>{locale === "zh" ? "观看" : "Watch"}</span>
+              </CreepyActionButton>
+            </div>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Eye, Flame } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { type FeedVideoItem, type Locale } from "@/lib/types";
@@ -154,6 +155,14 @@ export function DiscoverClient({ locale, videos }: DiscoverClientProps) {
               <h3 className="mt-3 line-clamp-2 text-lg font-semibold text-[var(--avp-text)]">
                 {video.title[locale]}
               </h3>
+              <div className="mt-3 flex justify-end">
+                <Link
+                  href={`/watch/${video.id}?lang=${locale}`}
+                  className="inline-flex min-h-[38px] items-center justify-center rounded-full border border-[rgba(178,226,255,0.3)] bg-[rgba(79,153,255,0.18)] px-4 text-sm font-semibold text-[var(--avp-text)] transition hover:border-[rgba(178,226,255,0.42)] hover:bg-[rgba(79,153,255,0.26)]"
+                >
+                  {locale === "zh" ? "观看" : "Watch"}
+                </Link>
+              </div>
             </article>
           ))}
         </div>
@@ -211,6 +220,14 @@ export function DiscoverClient({ locale, videos }: DiscoverClientProps) {
                     {(video.likesCount + video.commentsCount + 38).toLocaleString()}{" "}
                     {locale === "zh" ? "观看" : "views"}
                   </p>
+                </div>
+                <div className="mt-3 flex justify-end">
+                  <Link
+                    href={`/watch/${video.id}?lang=${locale}`}
+                    className="inline-flex min-h-[38px] items-center justify-center rounded-full border border-[rgba(178,226,255,0.24)] bg-[rgba(255,255,255,0.04)] px-4 text-sm font-semibold text-[var(--avp-text)] transition hover:border-[rgba(178,226,255,0.42)] hover:bg-[rgba(79,153,255,0.16)]"
+                  >
+                    {locale === "zh" ? "观看" : "Watch"}
+                  </Link>
                 </div>
               </article>
             ))}

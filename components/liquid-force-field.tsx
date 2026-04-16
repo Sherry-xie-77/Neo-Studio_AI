@@ -4,16 +4,16 @@ import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
-type Blob = {
+type Particle = {
   x: number;
   y: number;
   ox: number;
   oy: number;
   vx: number;
   vy: number;
-  radius: number;
-  color: string;
-  drift: number;
+  size: number;
+  alpha: number;
+  pulse: number;
 };
 
 export function LiquidForceField({ className }: { className?: string }) {
@@ -28,127 +28,138 @@ export function LiquidForceField({ className }: { className?: string }) {
     if (!context) return;
 
     let animationFrame = 0;
-    let blobs: Blob[] = [];
     let width = 0;
     let height = 0;
     let time = 0;
-
-    const palette = [
-      "rgba(79, 153, 255, 0.20)",
-      "rgba(17, 79, 153, 0.22)",
-      "rgba(0, 73, 187, 0.18)",
-      "rgba(137, 217, 255, 0.16)",
-    ];
+    let particles: Particle[] = [];
 
     const setSize = () => {
       const ratio = window.devicePixelRatio || 1;
       width = window.innerWidth;
       height = window.innerHeight;
+
       canvas.width = width * ratio;
       canvas.height = height * ratio;
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-      const count = width < 768 ? 8 : 12;
-      blobs = Array.from({ length: count }, (_, index) => ({
-        x: width * (0.15 + (index % 4) * 0.22),
-        y: height * (0.14 + Math.floor(index / 4) * 0.24),
-        ox: width * (0.15 + (index % 4) * 0.22),
-        oy: height * (0.14 + Math.floor(index / 4) * 0.24),
-        vx: 0,
-        vy: 0,
-        radius: width < 768 ? 120 + (index % 3) * 24 : 170 + (index % 4) * 34,
-        color: palette[index % palette.length],
-        drift: Math.random() * Math.PI * 2,
-      }));
+      const spacing = width < 768 ? 18 : 16;
+      particles = [];
+
+      for (let y = spacing; y < height; y += spacing) {
+        for (let x = spacing; x < width; x += spacing) {
+          const centerDistance = Math.hypot(x - width * 0.5, y - height * 0.42);
+          const normalized = Math.min(centerDistance / (width * 0.48), 1);
+          const visibility = 1 - normalized;
+          const jitter = (Math.random() - 0.5) * 1.4;
+
+          particles.push({
+            x: x + jitter,
+            y: y + jitter,
+            ox: x + jitter,
+            oy: y + jitter,
+            vx: 0,
+            vy: 0,
+            size: width < 768 ? 1.3 + visibility * 1.5 : 1.2 + visibility * 1.8,
+            alpha: 0.22 + visibility * 0.52,
+            pulse: Math.random() * Math.PI * 2,
+          });
+        }
+      }
     };
 
-    const drawBackground = () => {
-      const wash = context.createLinearGradient(0, 0, width, height);
-      wash.addColorStop(0, "rgba(4, 18, 42, 0.90)");
-      wash.addColorStop(0.45, "rgba(4, 11, 27, 0.64)");
-      wash.addColorStop(1, "rgba(2, 6, 14, 0.92)");
-      context.fillStyle = wash;
+    const drawBackdrop = () => {
+      const gradient = context.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, "#010307");
+      gradient.addColorStop(0.45, "#03101f");
+      gradient.addColorStop(1, "#010204");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, width, height);
+
+      const glow = context.createRadialGradient(
+        width * 0.5,
+        height * 0.42,
+        0,
+        width * 0.5,
+        height * 0.42,
+        Math.max(width * 0.34, 280),
+      );
+      glow.addColorStop(0, "rgba(25, 121, 255, 0.18)");
+      glow.addColorStop(0.28, "rgba(16, 83, 188, 0.12)");
+      glow.addColorStop(0.7, "rgba(5, 22, 42, 0.04)");
+      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+      context.fillStyle = glow;
       context.fillRect(0, 0, width, height);
     };
 
-    const drawBlob = (blob: Blob) => {
-      const gradient = context.createRadialGradient(
-        blob.x - blob.radius * 0.18,
-        blob.y - blob.radius * 0.22,
-        blob.radius * 0.08,
-        blob.x,
-        blob.y,
-        blob.radius,
-      );
+    const drawParticles = () => {
+      const pointerRadius = width < 768 ? 120 : 160;
 
-      gradient.addColorStop(0, "rgba(220, 246, 255, 0.24)");
-      gradient.addColorStop(0.18, blob.color);
-      gradient.addColorStop(0.65, blob.color.replace(/0\.\d+\)/, "0.08)"));
-      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      for (const particle of particles) {
+        const dx = particle.x - pointerRef.current.x;
+        const dy = particle.y - pointerRef.current.y;
+        const distance = Math.hypot(dx, dy) || 1;
 
-      context.beginPath();
-      context.fillStyle = gradient;
-      context.filter = "blur(24px)";
-      context.ellipse(
-        blob.x,
-        blob.y,
-        blob.radius * 1.08,
-        blob.radius * (0.82 + Math.sin(time * 0.0018 + blob.drift) * 0.05),
-        Math.sin(time * 0.0007 + blob.drift) * 0.8,
-        0,
-        Math.PI * 2,
-      );
-      context.fill();
-      context.filter = "none";
+        if (pointerRef.current.active && distance < pointerRadius) {
+          const force = (1 - distance / pointerRadius) * 0.9;
+          particle.vx += (dx / distance) * force;
+          particle.vy += (dy / distance) * force;
+        }
+
+        particle.vx += (particle.ox - particle.x) * 0.024;
+        particle.vy += (particle.oy - particle.y) * 0.024;
+        particle.vx *= 0.88;
+        particle.vy *= 0.88;
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+
+        const pulse = 0.82 + Math.sin(time * 0.0015 + particle.pulse) * 0.18;
+        const highlight =
+          pointerRef.current.active && distance < pointerRadius
+            ? 0.32 * (1 - distance / pointerRadius)
+            : 0;
+
+        context.beginPath();
+        context.fillStyle = `rgba(46, 152, 255, ${particle.alpha * pulse + highlight})`;
+        context.arc(
+          particle.x,
+          particle.y,
+          particle.size + highlight * 2.4,
+          0,
+          Math.PI * 2,
+        );
+        context.fill();
+      }
     };
 
-    const drawGlassHighlights = () => {
-      const gradient = context.createRadialGradient(
-        width * 0.52,
-        height * 0.28,
-        0,
-        width * 0.52,
-        height * 0.28,
-        width * 0.55,
-      );
-      gradient.addColorStop(0, "rgba(255,255,255,0.08)");
-      gradient.addColorStop(0.3, "rgba(110,190,255,0.06)");
-      gradient.addColorStop(1, "rgba(0,0,0,0)");
-      context.fillStyle = gradient;
-      context.fillRect(0, 0, width, height);
+    const drawFineGrid = () => {
+      context.save();
+      context.strokeStyle = "rgba(64, 132, 220, 0.03)";
+      context.lineWidth = 1;
+
+      for (let x = 0; x <= width; x += 84) {
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, height);
+        context.stroke();
+      }
+
+      for (let y = 0; y <= height; y += 84) {
+        context.beginPath();
+        context.moveTo(0, y);
+        context.lineTo(width, y);
+        context.stroke();
+      }
+
+      context.restore();
     };
 
     const animate = () => {
       time += 16;
-      drawBackground();
-
-      for (const blob of blobs) {
-        const px = pointerRef.current.x;
-        const py = pointerRef.current.y;
-        const dx = blob.x - px;
-        const dy = blob.y - py;
-        const distance = Math.hypot(dx, dy) || 1;
-        const radius = pointerRef.current.active ? 260 : 180;
-
-        if (distance < radius) {
-          const force = (1 - distance / radius) * 1.9;
-          blob.vx += (dx / distance) * force;
-          blob.vy += (dy / distance) * force;
-        }
-
-        blob.vx += (blob.ox + Math.sin(time * 0.00045 + blob.drift) * 28 - blob.x) * 0.012;
-        blob.vy += (blob.oy + Math.cos(time * 0.00038 + blob.drift) * 22 - blob.y) * 0.012;
-        blob.vx *= 0.94;
-        blob.vy *= 0.94;
-        blob.x += blob.vx;
-        blob.y += blob.vy;
-
-        drawBlob(blob);
-      }
-
-      drawGlassHighlights();
+      drawBackdrop();
+      drawParticles();
+      drawFineGrid();
       animationFrame = window.requestAnimationFrame(animate);
     };
 

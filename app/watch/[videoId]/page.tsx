@@ -1,0 +1,247 @@
+import Image from "next/image";
+import Link from "next/link";
+import { ChevronLeft, Heart, Play, Share2, Star } from "lucide-react";
+import { notFound } from "next/navigation";
+
+import { SiteShell } from "@/components/site-shell";
+import { getFeedVideoById, getFeedVideos } from "@/lib/server/store";
+import { resolveSeriesForVideo } from "@/lib/watch-series";
+
+function getLocale(searchParams: { lang?: string }) {
+  return searchParams.lang === "zh" ? "zh" : "en";
+}
+
+export default async function WatchVideoPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ videoId: string }>;
+  searchParams: Promise<{ lang?: string }>;
+}) {
+  const [{ videoId }, rawSearchParams] = await Promise.all([params, searchParams]);
+  const locale = getLocale(rawSearchParams);
+  const [video, videos] = await Promise.all([getFeedVideoById(videoId), getFeedVideos()]);
+
+  if (!video) {
+    notFound();
+  }
+
+  const series = resolveSeriesForVideo(video, videos);
+  const currentEpisodeIndex = series.episodes.findIndex((item) => item.id === video.id);
+  const episodeNumber = currentEpisodeIndex >= 0 ? currentEpisodeIndex + 1 : 1;
+
+  return (
+    <SiteShell locale={locale} className="pb-20">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <section className="space-y-5">
+          <div className="flex items-center justify-between gap-4">
+            <Link
+              href={`/?lang=${locale}`}
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--avp-border)] bg-[rgba(255,255,255,0.04)] px-4 py-2 text-sm text-[var(--avp-text-muted)] transition hover:text-[var(--avp-text)]"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              {locale === "zh" ? "返回首页" : "Back to home"}
+            </Link>
+
+            <div className="text-right text-sm text-[var(--avp-text-muted)]">
+              {series.title[locale]} / {locale === "zh" ? `第 ${episodeNumber} 集` : `Episode ${episodeNumber}`}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-[34px] border border-[var(--avp-border)] bg-[rgba(2,8,20,0.88)] shadow-[0_30px_80px_rgba(0,0,0,0.34)]">
+            <div className="grid gap-0 xl:grid-cols-[minmax(0,1fr)_360px]">
+              <div className="relative flex min-h-[720px] items-center justify-center bg-black p-4 sm:p-6">
+                {video.videoUrl ? (
+                  <video
+                    className="h-full max-h-[80vh] w-auto max-w-full rounded-[28px] bg-black object-contain"
+                    controls
+                    playsInline
+                    poster={video.posterUrl}
+                  >
+                    <source
+                      src={video.videoUrl}
+                      type={video.videoUrl.endsWith(".ogv") ? "video/ogg" : "video/webm"}
+                    />
+                  </video>
+                ) : (
+                  <div className="flex aspect-[9/16] w-full max-w-[420px] items-center justify-center rounded-[28px] border border-[var(--avp-border)] bg-[rgba(255,255,255,0.03)] p-8 text-center text-[var(--avp-text-muted)]">
+                    {locale === "zh"
+                      ? "这个剧集正在等待真实视频素材接入。"
+                      : "This episode is still waiting for the real video asset."}
+                  </div>
+                )}
+
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_38%,rgba(0,0,0,0.42)_100%)]" />
+                <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
+                  <div className="rounded-[26px] border border-[rgba(178,226,255,0.14)] bg-[rgba(0,0,0,0.48)] p-5 backdrop-blur-md">
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--avp-text-muted)]">
+                      {locale === "zh" ? `第 ${episodeNumber} 集` : `Episode ${episodeNumber}`}
+                    </p>
+                    <h1 className="mt-3 text-3xl font-semibold text-[var(--avp-text)]">
+                      {video.title[locale]}
+                    </h1>
+                    <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--avp-text-muted)]">
+                      {video.summary[locale]}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <aside className="space-y-5 border-t border-[var(--avp-border)] bg-[rgba(2,8,20,0.96)] p-6 xl:border-l xl:border-t-0">
+                <div>
+                  <p className="text-sm text-[var(--avp-text-muted)]">
+                    {locale === "zh"
+                      ? `Home / ${series.title[locale]} / 第 ${episodeNumber} 集`
+                      : `Home / ${series.title[locale]} / Episode ${episodeNumber}`}
+                  </p>
+                  <h2 className="mt-4 text-3xl font-semibold leading-tight text-[var(--avp-text)]">
+                    {locale === "zh"
+                      ? `第 ${episodeNumber} 集 · ${video.title[locale]}`
+                      : `Episode ${episodeNumber} · ${video.title[locale]}`}
+                  </h2>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold text-[var(--avp-text)]">
+                    {locale === "zh" ? "本集简介" : "Episode summary"}
+                  </p>
+                  <p className="mt-3 text-sm leading-7 text-[var(--avp-text-muted)]">
+                    {video.recommendationReason[locale]}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {[video.trendLabel[locale], video.collection, video.featured ? (locale === "zh" ? "精选推荐" : "Featured") : null]
+                    .filter(Boolean)
+                    .map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full border border-[var(--avp-border)] bg-[rgba(255,255,255,0.04)] px-3 py-1 text-xs text-[var(--avp-text-muted)]"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 border-y border-[rgba(255,255,255,0.08)] py-5 text-center">
+                  <div>
+                    <Heart className="mx-auto h-5 w-5 text-[var(--avp-text)]" />
+                    <p className="mt-2 text-sm text-[var(--avp-text)]">
+                      {(video.likesCount + 12).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <Star className="mx-auto h-5 w-5 text-[var(--avp-text)]" />
+                    <p className="mt-2 text-sm text-[var(--avp-text)]">
+                      {(video.likesCount + video.commentsCount + 620).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <Share2 className="mx-auto h-5 w-5 text-[var(--avp-text)]" />
+                    <p className="mt-2 text-sm text-[var(--avp-text)]">
+                      {locale === "zh" ? "分享" : "Share"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-4 text-sm">
+                      <button className="border-b-2 border-[#ff4f70] pb-2 text-[#ff748f]">
+                        1 - {series.episodes.length}
+                      </button>
+                    </div>
+                    <p className="text-sm text-[var(--avp-text-muted)]">
+                      {locale === "zh" ? "全部剧集" : "All episodes"}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-5 gap-2">
+                    {series.episodes.map((episode, index) => {
+                      const active = episode.id === video.id;
+
+                      return (
+                        <Link
+                          key={episode.id}
+                          href={`/watch/${episode.id}?lang=${locale}`}
+                          className={active
+                            ? "flex min-h-[42px] items-center justify-center rounded-[10px] border border-[rgba(255,99,132,0.5)] bg-[rgba(255,79,112,0.18)] text-sm font-semibold text-white"
+                            : "flex min-h-[42px] items-center justify-center rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-sm text-[var(--avp-text-muted)] transition hover:text-[var(--avp-text)]"
+                          }
+                        >
+                          {index + 1}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="rounded-[22px] border border-[var(--avp-border)] bg-[rgba(255,255,255,0.03)] p-4">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--avp-text-muted)]">
+                    {locale === "zh" ? "继续创作" : "Keep creating"}
+                  </p>
+                  <Link
+                    href={`/create?template=${video.templateSlug}&from=${video.id}&lang=${locale}`}
+                    className="mt-4 inline-flex min-h-[46px] items-center justify-center rounded-full bg-[linear-gradient(180deg,#ffffff_0%,#e7f1ff_100%)] px-5 text-sm font-semibold text-[#0d3d7b] shadow-[0_16px_30px_rgba(0,73,187,0.18)]"
+                  >
+                    <Play className="mr-2 h-4 w-4" />
+                    {locale === "zh" ? "去工作台复刻" : "Open in studio"}
+                  </Link>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </section>
+
+        <aside className="space-y-4 rounded-[30px] border border-[var(--avp-border)] bg-[rgba(7,17,40,0.58)] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.24)] backdrop-blur-xl xl:sticky xl:top-24 xl:h-fit">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--avp-text-muted)]">
+              {locale === "zh" ? "你可能还会看" : "More to watch"}
+            </p>
+            <h3 className="mt-2 text-2xl font-semibold text-[var(--avp-text)]">
+              {series.title[locale]}
+            </h3>
+          </div>
+
+          <div className="grid gap-3">
+            {series.episodes.map((episode, index) => {
+              const active = episode.id === video.id;
+
+              return (
+                <Link
+                  key={episode.id}
+                  href={`/watch/${episode.id}?lang=${locale}`}
+                  className={active
+                    ? "grid grid-cols-[70px_minmax(0,1fr)] gap-3 rounded-[22px] border border-[rgba(255,99,132,0.4)] bg-[rgba(255,79,112,0.12)] p-3"
+                    : "grid grid-cols-[70px_minmax(0,1fr)] gap-3 rounded-[22px] border border-[var(--avp-border)] bg-[rgba(255,255,255,0.03)] p-3 transition hover:border-[var(--avp-border-strong)]"
+                  }
+                >
+                  <div className="relative overflow-hidden rounded-[14px]">
+                    <Image
+                      src={episode.posterUrl}
+                      alt={episode.title[locale]}
+                      width={70}
+                      height={124}
+                      className="aspect-[9/16] h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--avp-text-muted)]">
+                      {locale === "zh" ? `第 ${index + 1} 集` : `Episode ${index + 1}`}
+                    </p>
+                    <p className="mt-2 line-clamp-2 text-sm font-semibold text-[var(--avp-text)]">
+                      {episode.title[locale]}
+                    </p>
+                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--avp-text-muted)]">
+                      {episode.summary[locale]}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </aside>
+      </div>
+    </SiteShell>
+  );
+}

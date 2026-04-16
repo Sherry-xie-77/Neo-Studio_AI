@@ -13,11 +13,11 @@ export const feedHeroCopy = {
 
 export const createPageCopy = {
   title: {
-    en: "Control the template, prompt, and output path from one studio surface.",
-    zh: "在一个工作台里统一控制模板、提示词和输出路径。",
+    en: "Make breakout short-form hits here.",
+    zh: "做爆款，在这里完成。",
   },
   body: {
-    en: "Select a base template, tune the prompt, and push a new job through the generation pipeline with a cleaner production-style interface.",
-    zh: "选择基础模板，调整提示词，再用更接近生产工具的界面把任务送进生成链路。",
+    en: "Move from proven templates to launch-ready short videos in one place, with a faster path to viral-looking results.",
+    zh: "从成熟模板到爆款感成片，把选模板、调提示词和启动生成都集中在这里完成。",
   },
 } satisfies Record<string, BilingualText>;
