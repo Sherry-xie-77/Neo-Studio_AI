@@ -408,3 +408,37 @@ p {
   --jb-shell-mid: #56acef;
   --jb-shell-end: #2d7cd0;
 }
+
+@media (max-width: 640px) {
+  .jelly-btn {
+    min-width: 0;
+    max-width: 100%;
+    min-height: 3.35rem;
+  }
+
+  .jelly-btn__core {
+    inset: 0.48rem 0.58rem;
+    border-radius: 1.2rem;
+  }
+
+  .jelly-btn__label {
+    padding: 0 0.9rem;
+    font-size: 0.82rem;
+  }
+
+  .creepy-action-btn {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    font-size: 0.82rem;
+  }
+
+  .creepy-action-btn__cover {
+    padding: 0.72em 0.92em;
+  }
+
+  .creepy-action-btn__eyes {
+    right: 0.82em;
+    bottom: 0.34em;
+  }
+}

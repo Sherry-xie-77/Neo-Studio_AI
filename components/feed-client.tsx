@@ -772,7 +772,7 @@ function FeedVideoCard({
             </h2>
           </div>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -802,11 +802,11 @@ function FeedVideoCard({
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
               <JellyButton
                 href={`/create?template=${video.templateSlug}&from=${video.id}&lang=${locale}`}
                 tone="ghost"
-                className="pointer-events-auto min-w-[110px]"
+                className="pointer-events-auto h-[3.4rem] w-full min-w-0 max-w-full sm:h-auto sm:min-w-[110px]"
                 onMouseEnter={() => onCursorScaleChange(1.5)}
                 onMouseLeave={() => onCursorScaleChange(1.2)}
               >
@@ -815,7 +815,7 @@ function FeedVideoCard({
               <CreepyActionButton
                 href={`/watch/${video.id}?lang=${locale}`}
                 intensity="subtle"
-                className="pointer-events-auto inline-flex items-center gap-2 text-sm"
+                className="pointer-events-auto inline-flex h-[3.4rem] w-full min-w-0 max-w-full items-center justify-center gap-2 text-sm sm:h-auto sm:min-w-[11em]"
                 onMouseEnter={() => onCursorScaleChange(1.6)}
                 onMouseLeave={() => onCursorScaleChange(1.2)}
               >
