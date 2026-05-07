@@ -5,49 +5,33 @@ import { Eye, Flame } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import { type FeedVideoItem, type Locale } from "@/lib/types";
+import { type DiscoverCategory, type FeedVideoItem, type Locale } from "@/lib/types";
+import { matchesDiscoverCategory } from "@/lib/discover-categories";
 import { cn } from "@/lib/utils";
 
 type DiscoverClientProps = {
   locale: Locale;
   videos: FeedVideoItem[];
+  categories: DiscoverCategory[];
 };
-
-const categories = [
-  { id: "all", zh: "全部", en: "All" },
-  { id: "featured", zh: "精选", en: "Featured" },
-  { id: "short-video", zh: "短视频", en: "Short Video" },
-  { id: "comic", zh: "漫剧", en: "Comic Drama" },
-  { id: "short-drama", zh: "短剧", en: "Short Drama" },
-  { id: "ad", zh: "广告片", en: "Ad Film" },
-  { id: "mv", zh: "MV", en: "MV" },
-] as const;
 
 const sortOptions = [
   { id: "popular", zh: "最受欢迎", en: "Most Popular" },
   { id: "latest", zh: "最新", en: "Latest" },
 ] as const;
 
-function matchesCategory(video: FeedVideoItem, categoryId: (typeof categories)[number]["id"], index: number) {
-  if (categoryId === "all") return true;
-  if (categoryId === "featured") return index < 10;
-  if (categoryId === "short-video") return index % 2 === 0;
-  if (categoryId === "comic") return video.title.en.toLowerCase().includes("origami");
-  if (categoryId === "short-drama") return video.title.en.toLowerCase().includes("storybook");
-  if (categoryId === "ad") return video.title.en.toLowerCase().includes("macro");
-  if (categoryId === "mv") return video.title.en.toLowerCase().includes("loop");
-  return true;
-}
-
-export function DiscoverClient({ locale, videos }: DiscoverClientProps) {
-  const [selectedCategory, setSelectedCategory] = useState<(typeof categories)[number]["id"]>("all");
+export function DiscoverClient({ locale, videos, categories }: DiscoverClientProps) {
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSort, setSelectedSort] = useState<(typeof sortOptions)[number]["id"]>("popular");
 
   const filteredVideos = useMemo(() => {
     let result = [...videos];
 
     if (selectedCategory !== "all") {
-      result = result.filter((video, index) => matchesCategory(video, selectedCategory, index));
+      const category = categories.find((item) => item.id === selectedCategory);
+      if (category) {
+        result = result.filter((video, index) => matchesDiscoverCategory(video, category, index));
+      }
     }
 
     if (selectedSort === "popular") {
@@ -57,7 +41,7 @@ export function DiscoverClient({ locale, videos }: DiscoverClientProps) {
     }
 
     return result;
-  }, [selectedCategory, selectedSort, videos]);
+  }, [categories, selectedCategory, selectedSort, videos]);
 
   const hotPicks = filteredVideos.slice(0, 5);
   const groupedSections = useMemo(
@@ -66,12 +50,12 @@ export function DiscoverClient({ locale, videos }: DiscoverClientProps) {
         .filter((category) => category.id !== "all")
         .map((category) => ({
           id: category.id,
-          titleZh: category.zh,
-          titleEn: category.en,
-          videos: videos.filter((video, index) => matchesCategory(video, category.id, index)).slice(0, 5),
+          titleZh: category.title.zh,
+          titleEn: category.title.en,
+          videos: videos.filter((video, index) => matchesDiscoverCategory(video, category, index)).slice(0, 5),
         }))
         .filter((section) => section.videos.length > 0),
-    [videos],
+    [categories, videos],
   );
 
   return (
@@ -99,7 +83,7 @@ export function DiscoverClient({ locale, videos }: DiscoverClientProps) {
                     : "bg-[rgba(255,255,255,0.06)] text-[var(--avp-text-muted)] hover:bg-[rgba(255,255,255,0.1)] hover:text-[var(--avp-text)]",
                 )}
               >
-                {locale === "zh" ? category.zh : category.en}
+                {category.title[locale]}
               </button>
             );
           })}

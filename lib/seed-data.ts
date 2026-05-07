@@ -1,3 +1,4 @@
+import { defaultDiscoverCategories } from "@/lib/discover-categories";
 import { type FeedVideoItem, type StoreShape, type VideoComment, type VideoTemplate } from "@/lib/types";
 
 type SeedDescriptor = {
@@ -812,5 +813,13 @@ export function makeInitialStore(): StoreShape {
     likes: {},
     generations: {},
     sessions: {},
+    premiumOrders: {},
+    featuredCases: {},
+    contentSettings: {
+      homeVideoOrder: [],
+      discoverVideoOrder: [],
+      discoverCategories: defaultDiscoverCategories,
+      featuredCaseOrder: [],
+    },
   };
 }

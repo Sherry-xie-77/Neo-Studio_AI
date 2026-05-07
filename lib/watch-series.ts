@@ -1,6 +1,6 @@
 import { type BilingualText, type FeedVideoItem } from "@/lib/types";
 
-const collectionTitles: Record<string, BilingualText> = {
+const templateCollectionTitles: Record<string, BilingualText> = {
   "Trending Now": {
     en: "Trending Hit List",
     zh: "爆款热播榜",
@@ -23,28 +23,36 @@ function sortEpisodes(a: FeedVideoItem, b: FeedVideoItem) {
   return a.id.localeCompare(b.id);
 }
 
-export function resolveSeriesForVideo(target: FeedVideoItem, videos: FeedVideoItem[]) {
-  const sameCollection = videos
-    .filter((video) => video.collection === target.collection)
-    .sort(sortEpisodes);
+function isTemplateCollection(collection: string) {
+  return collection in templateCollectionTitles;
+}
 
-  if (sameCollection.length >= 2) {
+export function resolveSeriesForVideo(target: FeedVideoItem, videos: FeedVideoItem[]) {
+  const sortedVideos = [...videos].sort(sortEpisodes);
+
+  if (isTemplateCollection(target.collection)) {
     return {
-      episodes: sameCollection,
-      title: collectionTitles[target.collection] ?? {
-        en: target.collection,
-        zh: target.collection,
+      episodes: sortedVideos,
+      title: {
+        en: "AI Video Pro Anthology",
+        zh: "AI Video Pro 连播",
       },
-      collectionLabel: target.collection,
+      collectionLabel: "AI Video Pro Anthology",
     };
   }
 
+  const sameCollection = sortedVideos.filter((video) => video.collection === target.collection);
+
   return {
-    episodes: [...videos].sort(sortEpisodes).slice(0, Math.min(videos.length, 12)),
+    episodes: sameCollection.length ? sameCollection : [target],
     title: {
-      en: "AI Video Pro Anthology",
-      zh: "AI Video Pro 连播",
+      en: target.collection,
+      zh: target.collection,
     },
     collectionLabel: target.collection,
   };
+}
+
+export function getFirstEpisodeForVideo(target: FeedVideoItem, videos: FeedVideoItem[]) {
+  return resolveSeriesForVideo(target, videos).episodes[0] ?? target;
 }

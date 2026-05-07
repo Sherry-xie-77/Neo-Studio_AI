@@ -2,19 +2,22 @@
 
 import { Heart, MessageCircle } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { captureClientEvent } from "@/lib/client/posthog";
 import { CreepyActionButton } from "@/components/creepy-action-button";
 import { JellyButton } from "@/components/jelly-button";
 import { TRACKING_EVENTS } from "@/lib/constants";
-import { type FeedVideoItem, type Locale, type VideoComment } from "@/lib/types";
+import { type FeaturedCase, type FeedVideoItem, type Locale, type VideoComment } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { getFirstEpisodeForVideo } from "@/lib/watch-series";
 
 type FeedClientProps = {
   locale: Locale;
   initialVideos: FeedVideoItem[];
   initialComments: Record<string, VideoComment[]>;
+  featuredCases: FeaturedCase[];
   initialFilters: {
     tag?: string;
     intent?: string;
@@ -43,6 +46,7 @@ export function FeedClient({
   locale,
   initialVideos,
   initialComments,
+  featuredCases,
   initialFilters,
 }: FeedClientProps) {
   void initialFilters;
@@ -155,6 +159,13 @@ export function FeedClient({
   );
   const activeVideo =
     videos.find((video) => video.id === activeVideoId) ?? videos[0] ?? null;
+  const firstEpisodeByVideoId = useMemo(() => {
+    const firstById = new Map<string, FeedVideoItem>();
+    for (const video of videos) {
+      firstById.set(video.id, getFirstEpisodeForVideo(video, videos));
+    }
+    return firstById;
+  }, [videos]);
   const leftColumnVideos = useMemo(
     () => videos.filter((_, index) => index % 2 === 0),
     [videos],
@@ -350,6 +361,7 @@ export function FeedClient({
               index={0}
               locale={locale}
               video={video}
+              watchVideoId={firstEpisodeByVideoId.get(video.id)?.id ?? video.id}
               liked={Boolean(likedIds[video.id])}
               onLike={() => void handleLike(video.id)}
               onOpenComments={() => void openComments(video)}
@@ -368,6 +380,7 @@ export function FeedClient({
               index={1}
               locale={locale}
               video={video}
+              watchVideoId={firstEpisodeByVideoId.get(video.id)?.id ?? video.id}
               liked={Boolean(likedIds[video.id])}
               onLike={() => void handleLike(video.id)}
               onOpenComments={() => void openComments(video)}
@@ -485,16 +498,26 @@ export function FeedClient({
         </div>
 
         <div className="grid gap-6 pt-2 xl:grid-cols-[320px_repeat(3,minmax(0,1fr))]">
-          <FeaturedRankingCard locale={locale} videos={videos.slice(0, 4)} />
-
-          {videos.slice(0, 3).map((video, index) => (
-            <FeaturedCaseCard
-              key={video.id}
-              locale={locale}
-              video={video}
-              featuredCount={12 + index * 9}
-            />
-          ))}
+          {featuredCases.length ? (
+            <>
+              <FeaturedCaseRankingCard locale={locale} cases={featuredCases.slice(0, 4)} />
+              {featuredCases.slice(0, 3).map((item) => (
+                <FeaturedCaseCard key={item.id} locale={locale} item={item} />
+              ))}
+            </>
+          ) : (
+            <>
+              <FeaturedRankingCard locale={locale} videos={videos.slice(0, 4)} />
+              {videos.slice(0, 3).map((video, index) => (
+                <FallbackFeaturedCaseCard
+                  key={video.id}
+                  locale={locale}
+                  video={video}
+                  featuredCount={12 + index * 9}
+                />
+              ))}
+            </>
+          )}
         </div>
       </section>
     </>
@@ -557,7 +580,118 @@ function FeaturedRankingCard({
   );
 }
 
+function FeaturedCaseRankingCard({
+  locale,
+  cases,
+}: {
+  locale: Locale;
+  cases: FeaturedCase[];
+}) {
+  return (
+    <article className="overflow-hidden rounded-[26px] border border-[rgba(165,215,255,0.18)] bg-[linear-gradient(180deg,rgba(55,104,255,0.96),rgba(37,69,205,0.96))] shadow-[0_24px_60px_rgba(12,28,94,0.28)]">
+      <div className="grid h-full grid-rows-[140px_1fr]">
+        <div className="flex items-start justify-between p-5">
+          <div className="rounded-[20px] bg-black/88 px-4 py-3 text-white">
+            <p className="text-sm font-semibold leading-5">
+              {locale === "zh" ? "成功" : "Success"}
+              <br />
+              {locale === "zh" ? "案例榜" : "Cases"}
+            </p>
+          </div>
+          <div className="text-right text-white">
+            <p className="text-2xl font-semibold">{locale === "zh" ? "案例榜" : "Top Cases"}</p>
+            <p className="mt-2 text-sm text-white/78">
+              {locale === "zh" ? "内部精选账号增长" : "Selected account growth"}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4 px-4 pb-4">
+          {cases.map((item, index) => (
+            <a
+              key={item.id}
+              href={item.accountUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="grid grid-cols-[44px_64px_minmax(0,1fr)] items-center gap-3 rounded-[18px] bg-white/92 px-3 py-3 text-[#1b2650] transition hover:bg-white"
+            >
+              <div className="text-2xl font-semibold">{index + 1}</div>
+              <div className="relative h-12 overflow-hidden rounded-[12px]">
+                <Image
+                  src={item.screenshotUrl}
+                  alt={item.accountName}
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-base font-semibold">{item.accountName}</p>
+                <p className="mt-1 text-sm text-[#46527f]">{item.followers}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function FeaturedCaseCard({
+  locale,
+  item,
+}: {
+  locale: Locale;
+  item: FeaturedCase;
+}) {
+  return (
+    <a
+      href={item.accountUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="grid h-full grid-rows-[auto_auto_auto_1fr] rounded-[26px] border border-[rgba(165,215,255,0.16)] bg-[rgba(7,17,40,0.56)] p-5 shadow-[0_22px_50px_rgba(0,0,0,0.2)] backdrop-blur-xl transition hover:border-[var(--avp-border-strong)]"
+    >
+      <div className="relative mb-5 h-20 overflow-hidden rounded-[18px]">
+        <Image
+          src={item.screenshotUrl}
+          alt={item.accountName}
+          fill
+          sizes="(min-width: 1280px) 18vw, 100vw"
+          className="object-cover"
+        />
+      </div>
+
+      <div className="mb-5 flex items-center gap-3">
+        <div className="relative h-16 w-16 overflow-hidden rounded-full border-4 border-white/90 shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+          <Image
+            src={item.screenshotUrl}
+            alt={item.accountName}
+            fill
+            sizes="64px"
+            className="object-cover"
+          />
+        </div>
+        <div className="min-w-0">
+          <h3 className="truncate text-2xl font-semibold text-[var(--avp-text)]">
+            {item.accountName}
+          </h3>
+          <p className="mt-1 text-sm text-[var(--avp-text-muted)]">
+            {locale === "zh" ? "账号主页案例" : "Account case study"}
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-5 space-y-2 text-sm text-[var(--avp-text-muted)]">
+        <p className="font-semibold text-[var(--avp-text)]">{item.title[locale]}</p>
+        <p className="line-clamp-2">{item.summary[locale]}</p>
+        <p className="font-semibold text-[var(--avp-text)]">
+          {item.followers} {locale === "zh" ? "粉丝" : "followers"} | {item.totalViews} {locale === "zh" ? "总曝光" : "views"}
+        </p>
+      </div>
+    </a>
+  );
+}
+function FallbackFeaturedCaseCard({
   locale,
   video,
   featuredCount,
@@ -633,6 +767,7 @@ function FeedVideoCard({
   index,
   locale,
   video,
+  watchVideoId,
   liked,
   onLike,
   onOpenComments,
@@ -642,6 +777,7 @@ function FeedVideoCard({
   index: number;
   locale: Locale;
   video: FeedVideoItem;
+  watchVideoId: string;
   liked: boolean;
   onLike: () => void;
   onOpenComments: () => void;
@@ -719,10 +855,17 @@ function FeedVideoCard({
         transform: `perspective(1200px) rotateX(${tiltStyle.rotateX}deg) translateY(${tiltStyle.translateY}px) scale(${tiltStyle.scale})`,
       }}
     >
-      <div
+      <Link
+        href={`/watch/${watchVideoId}?lang=${locale}`}
         className={cn(
-          "relative mx-auto aspect-[9/16] w-full overflow-hidden",
+          "relative mx-auto block aspect-[9/16] w-full overflow-hidden",
         )}
+        aria-label={locale === "zh" ? `从第一集观看 ${video.title[locale]}` : `Watch ${video.title[locale]} from episode 1`}
+        onClick={() => {
+          captureClientEvent(TRACKING_EVENTS.videoHoverPlay, {
+            videoId: watchVideoId,
+          });
+        }}
       >
         <Image
           src={video.posterUrl}
@@ -759,7 +902,7 @@ function FeedVideoCard({
           </div>
         </div>
 
-      </div>
+      </Link>
 
       <div className="border-t border-[rgba(165,215,255,0.1)] bg-[linear-gradient(180deg,rgba(5,20,54,0.96),rgba(3,11,29,0.98))] px-5 py-4">
         <div className="flex flex-col gap-4">
@@ -813,13 +956,13 @@ function FeedVideoCard({
                 {locale === "zh" ? "工作台" : "Studio"}
               </JellyButton>
               <CreepyActionButton
-                href={`/watch/${video.id}?lang=${locale}`}
+                href={`/watch/${watchVideoId}?lang=${locale}`}
                 intensity="subtle"
                 className="pointer-events-auto inline-flex h-[3.4rem] w-full min-w-0 max-w-full items-center justify-center gap-2 text-sm sm:h-auto sm:min-w-[11em]"
                 onMouseEnter={() => onCursorScaleChange(1.6)}
                 onMouseLeave={() => onCursorScaleChange(1.2)}
               >
-                <span>{locale === "zh" ? "观看" : "Watch"}</span>
+                <span>Watch</span>
               </CreepyActionButton>
             </div>
           </div>

@@ -152,6 +152,51 @@ export type GenerateResponse = {
   generation: GenerationRecord;
 };
 
+export type PremiumOrderStatus = "approved" | "rejected";
+
+export type PremiumOrder = {
+  id: string;
+  email: string;
+  receipt: string;
+  note?: string;
+  status: PremiumOrderStatus;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt?: string;
+  amountMinor?: number;
+  currency?: string;
+  productName?: string;
+  source?: "manual" | "agent-revenue";
+  reviewerNote?: string;
+};
+
+export type FeaturedCase = {
+  id: string;
+  title: BilingualText;
+  summary: BilingualText;
+  accountName: string;
+  followers: string;
+  totalViews: string;
+  accountUrl: string;
+  screenshotUrl: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type DiscoverCategory = {
+  id: string;
+  title: BilingualText;
+  match?: string;
+  locked?: boolean;
+};
+
+export type ContentSettings = {
+  homeVideoOrder: string[];
+  discoverVideoOrder: string[];
+  discoverCategories: DiscoverCategory[];
+  featuredCaseOrder: string[];
+};
+
 export type StoreShape = {
   feedVideos: Record<string, FeedVideoItem>;
   templates: Record<string, VideoTemplate>;
@@ -159,4 +204,7 @@ export type StoreShape = {
   likes: Record<string, VideoLike>;
   generations: Record<string, GenerationRecord>;
   sessions: Record<string, { id: string; createdAt: string; updatedAt: string }>;
+  premiumOrders: Record<string, PremiumOrder>;
+  featuredCases: Record<string, FeaturedCase>;
+  contentSettings: ContentSettings;
 };

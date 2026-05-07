@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ChevronLeft, Heart, Play, Share2, Star } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { LoginWatchGate } from "@/components/login-watch-gate";
+import { PremiumWatchGate } from "@/components/premium-watch-gate";
 import { SiteShell } from "@/components/site-shell";
 import { getFeedVideoById, getFeedVideos } from "@/lib/server/store";
 import { resolveSeriesForVideo } from "@/lib/watch-series";
@@ -50,40 +52,32 @@ export default async function WatchVideoPage({
 
           <div className="overflow-hidden rounded-[34px] border border-[var(--avp-border)] bg-[rgba(2,8,20,0.88)] shadow-[0_30px_80px_rgba(0,0,0,0.34)]">
             <div className="grid gap-0 xl:grid-cols-[minmax(0,1fr)_360px]">
-              <div className="relative flex min-h-[720px] items-center justify-center bg-black p-4 sm:p-6">
-                {video.videoUrl ? (
-                  <video
-                    className="h-full max-h-[80vh] w-auto max-w-full rounded-[28px] bg-black object-contain"
-                    controls
-                    playsInline
-                    poster={video.posterUrl}
-                  >
-                    <source
-                      src={video.videoUrl}
-                      type={video.videoUrl.endsWith(".ogv") ? "video/ogg" : "video/webm"}
-                    />
-                  </video>
-                ) : (
-                  <div className="flex aspect-[9/16] w-full max-w-[420px] items-center justify-center rounded-[28px] border border-[var(--avp-border)] bg-[rgba(255,255,255,0.03)] p-8 text-center text-[var(--avp-text-muted)]">
-                    {locale === "zh"
-                      ? "这个剧集正在等待真实视频素材接入。"
-                      : "This episode is still waiting for the real video asset."}
-                  </div>
-                )}
+              <div className="bg-black">
+                <div className="relative flex min-h-[720px] items-center justify-center p-4 sm:p-6">
+                  <LoginWatchGate
+                    locale={locale}
+                    nextPath={`/watch/${video.id}?lang=${locale}`}
+                    posterUrl={video.posterUrl}
+                  />
+                  <PremiumWatchGate
+                    locale={locale}
+                    paywallIndex={currentEpisodeIndex >= 0 ? currentEpisodeIndex : 0}
+                    episodeNumber={episodeNumber}
+                    videoUrl={video.videoUrl}
+                    posterUrl={video.posterUrl}
+                  />
+                </div>
 
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_38%,rgba(0,0,0,0.42)_100%)]" />
-                <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
-                  <div className="rounded-[26px] border border-[rgba(178,226,255,0.14)] bg-[rgba(0,0,0,0.48)] p-5 backdrop-blur-md">
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--avp-text-muted)]">
-                      {locale === "zh" ? `第 ${episodeNumber} 集` : `Episode ${episodeNumber}`}
-                    </p>
-                    <h1 className="mt-3 text-3xl font-semibold text-[var(--avp-text)]">
-                      {video.title[locale]}
-                    </h1>
-                    <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--avp-text-muted)]">
-                      {video.summary[locale]}
-                    </p>
-                  </div>
+                <div className="border-t border-[rgba(178,226,255,0.14)] bg-[rgba(2,8,20,0.96)] p-5 sm:p-6">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--avp-text-muted)]">
+                    {locale === "zh" ? `第 ${episodeNumber} 集` : `Episode ${episodeNumber}`}
+                  </p>
+                  <h1 className="mt-3 text-3xl font-semibold text-[var(--avp-text)]">
+                    {video.title[locale]}
+                  </h1>
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--avp-text-muted)]">
+                    {video.summary[locale]}
+                  </p>
                 </div>
               </div>
 
@@ -180,12 +174,20 @@ export default async function WatchVideoPage({
                   <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--avp-text-muted)]">
                     {locale === "zh" ? "继续创作" : "Keep creating"}
                   </p>
+                  <p className="mt-3 text-sm leading-6 text-[var(--avp-text-muted)]">
+                    {locale === "zh"
+                      ? "喜欢这个短剧风格？用同款模板继续生成你的专属镜头。"
+                      : "Like this short-drama style? Use the same template to create your own shot."}
+                  </p>
                   <Link
                     href={`/create?template=${video.templateSlug}&from=${video.id}&lang=${locale}`}
-                    className="mt-4 inline-flex min-h-[46px] items-center justify-center rounded-full bg-[linear-gradient(180deg,#ffffff_0%,#e7f1ff_100%)] px-5 text-sm font-semibold text-[#0d3d7b] shadow-[0_16px_30px_rgba(0,73,187,0.18)]"
+                    className="group mt-4 flex min-h-[56px] w-full items-center justify-center overflow-hidden rounded-[18px] border border-[rgba(178,226,255,0.28)] bg-[linear-gradient(135deg,rgba(79,153,255,0.24)_0%,rgba(139,125,255,0.22)_52%,rgba(255,116,143,0.18)_100%)] px-4 text-sm font-bold text-[var(--avp-text)] shadow-[0_18px_48px_rgba(79,153,255,0.18)] transition hover:-translate-y-0.5 hover:border-[rgba(178,226,255,0.48)] hover:shadow-[0_22px_64px_rgba(139,125,255,0.28)]"
                   >
-                    <Play className="mr-2 h-4 w-4" />
-                    {locale === "zh" ? "去工作台复刻" : "Open in studio"}
+                    <span className="absolute inset-0 translate-x-[-120%] bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)] transition duration-700 group-hover:translate-x-[120%]" />
+                    <span className="relative flex items-center gap-2">
+                      <Play className="h-4 w-4 shrink-0 text-[#b2e2ff]" />
+                      <span className="tracking-[0.08em]">Generate</span>
+                    </span>
                   </Link>
                 </div>
               </aside>

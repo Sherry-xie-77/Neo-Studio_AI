@@ -3,6 +3,7 @@ import { Kalam } from "next/font/google";
 import { type ReactNode } from "react";
 
 import { PostHogProvider } from "@/components/posthog-provider";
+import { PremiumProvider } from "@/components/premium-provider";
 
 import "./globals.css";
 
@@ -22,7 +23,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" data-scroll-behavior="smooth">
       <body className={kalam.variable}>
         <PostHogProvider />
-        {children}
+        <PremiumProvider>{children}</PremiumProvider>
       </body>
     </html>
   );
