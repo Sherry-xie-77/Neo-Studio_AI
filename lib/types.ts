@@ -60,6 +60,7 @@ export type FeedVideoItem = {
   seedComments: number;
   isExternalAsset: boolean;
   isReady: boolean;
+  discoverCategoryId?: string;
 };
 
 export type VideoTemplate = {

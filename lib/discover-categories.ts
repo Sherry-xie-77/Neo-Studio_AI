@@ -32,6 +32,9 @@ export function normalizeDiscoverCategories(categories: DiscoverCategory[] | und
 
 export function matchesDiscoverCategory(video: FeedVideoItem, category: DiscoverCategory, index: number) {
   if (category.id === "all") return true;
+  if (video.discoverCategoryId) {
+    return video.discoverCategoryId === category.id;
+  }
   if (category.id === "featured") return index < 10;
   if (category.id === "short-video") return index % 2 === 0;
   if (category.id === "comic") return video.title.en.toLowerCase().includes("origami");

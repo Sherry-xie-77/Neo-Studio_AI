@@ -327,6 +327,7 @@ export async function createUploadedVideo(input: {
   tags: string[];
   videoUrl: string;
   posterUrl: string;
+  discoverCategoryId?: string;
 }): Promise<FeedVideoItem> {
   const store = await readStore();
   const nextNumber = Object.keys(store.feedVideos).length + 1;
@@ -377,6 +378,7 @@ export async function createUploadedVideo(input: {
     likesCount: 0,
     commentsCount: 0,
     seedComments: 0,
+    discoverCategoryId: input.discoverCategoryId?.trim() || undefined,
   };
 
   const template: VideoTemplate = {

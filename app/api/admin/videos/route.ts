@@ -144,6 +144,7 @@ export async function POST(request: Request) {
   const summaryZh = String(formData.get("summaryZh") ?? "").trim();
   const summaryEn = String(formData.get("summaryEn") ?? "").trim();
   const collection = String(formData.get("collection") ?? "").trim();
+  const discoverCategoryId = String(formData.get("discoverCategoryId") ?? "").trim() || undefined;
   const tags = String(formData.get("tags") ?? "")
     .split(/[，,]/)
     .map((tag) => tag.trim())
@@ -178,6 +179,7 @@ export async function POST(request: Request) {
     tags,
     videoUrl,
     posterUrl,
+    discoverCategoryId,
   });
 
   return NextResponse.json({ video: uploaded });

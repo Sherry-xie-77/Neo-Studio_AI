@@ -216,7 +216,7 @@ export function AdminVideosClient({ locale }: { locale: Locale }) {
 
       {message ? <p className={status === "error" ? "text-sm text-[#ff748f]" : "text-sm text-[#b2e2ff]"}>{message}</p> : null}
 
-      {tab === "upload" ? <UploadVideoForm locale={locale} status={status} createdVideo={createdVideo} onSubmit={handleVideoSubmit} /> : null}
+      {tab === "upload" ? <UploadVideoForm locale={locale} status={status} createdVideo={createdVideo} onSubmit={handleVideoSubmit} categories={discoverCategories} /> : null}
       {tab === "home" ? <OrderEditor locale={locale} videos={videos} order={homeOrder} setOrder={setHomeOrder} hiddenIds={homeHiddenIds} setHiddenIds={setHomeHiddenIds} onSave={() => saveSettings({ homeVideoOrder: homeOrder, homeVideoHiddenIds: homeHiddenIds })} /> : null}
       {tab === "discover" ? <OrderEditor locale={locale} videos={videos} order={discoverOrder} setOrder={setDiscoverOrder} hiddenIds={discoverHiddenIds} setHiddenIds={setDiscoverHiddenIds} onSave={() => saveSettings({ discoverVideoOrder: discoverOrder, discoverVideoHiddenIds: discoverHiddenIds })} /> : null}
       {tab === "discover-categories" ? <DiscoverCategoryManager locale={locale} categories={discoverCategories} setCategories={setDiscoverCategories} onSave={() => saveSettings({ discoverCategories })} /> : null}
@@ -225,8 +225,9 @@ export function AdminVideosClient({ locale }: { locale: Locale }) {
   );
 }
 
-function UploadVideoForm({ locale, status, createdVideo, onSubmit }: { locale: Locale; status: UploadStatus; createdVideo: FeedVideoItem | null; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void }) {
+function UploadVideoForm({ locale, status, createdVideo, onSubmit, categories }: { locale: Locale; status: UploadStatus; createdVideo: FeedVideoItem | null; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; categories: DiscoverCategory[] }) {
   const zh = locale === "zh";
+  const selectableCategories = categories.filter((category) => category.id !== "all");
   return (
     <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
       <form onSubmit={onSubmit} className="rounded-[28px] border border-[var(--avp-border)] bg-[rgba(255,255,255,0.03)] p-6 shadow-[0_18px_70px_rgba(0,0,0,0.18)]">
@@ -239,8 +240,17 @@ function UploadVideoForm({ locale, status, createdVideo, onSubmit }: { locale: L
           <TextArea name="summaryEn" label={zh ? "英文简介" : "English summary"} />
           <div className="grid gap-3 sm:grid-cols-2">
             <TextInput name="collection" label={zh ? "短剧/合集名称" : "Drama or collection"} placeholder={zh ? "例如：总裁短剧第一季" : "e.g. CEO Drama Season 1"} required />
-            <TextInput name="tags" label={zh ? "标签" : "Tags"} placeholder={zh ? "短剧,爱情,逆袭" : "drama,romance,revenge"} />
+            <label className="grid gap-2 text-sm">
+              <span className="text-[var(--avp-text-muted)]">{zh ? "Discover 分类" : "Discover category"}</span>
+              <select name="discoverCategoryId" defaultValue="" required className="rounded-[18px] border border-[var(--avp-border)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-[var(--avp-text)] outline-none transition focus:border-[var(--avp-border-strong)]">
+                <option value="" disabled>{zh ? "选择 Discover 分类" : "Choose a Discover category"}</option>
+                {selectableCategories.map((category) => (
+                  <option key={category.id} value={category.id}>{category.title[locale]}</option>
+                ))}
+              </select>
+            </label>
           </div>
+          <TextInput name="tags" label={zh ? "标签" : "Tags"} placeholder={zh ? "短剧,爱情,逆袭" : "drama,romance,revenge"} />
           <FileInput name="video" label={zh ? "视频文件" : "Video file"} accept="video/mp4,video/webm,video/ogg,.mp4,.webm,.ogv" />
           <FileInput name="poster" label={zh ? "封面图" : "Poster image"} accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" />
           <PrimaryButton disabled={status === "submitting"}>{status === "submitting" ? (zh ? "上传中..." : "Uploading...") : zh ? "上传并发布" : "Upload and publish"}</PrimaryButton>
