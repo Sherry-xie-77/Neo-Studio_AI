@@ -192,7 +192,9 @@ export type DiscoverCategory = {
 
 export type ContentSettings = {
   homeVideoOrder: string[];
+  homeVideoHiddenIds: string[];
   discoverVideoOrder: string[];
+  discoverVideoHiddenIds: string[];
   discoverCategories: DiscoverCategory[];
   featuredCaseOrder: string[];
 };

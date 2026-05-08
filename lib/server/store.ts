@@ -229,14 +229,16 @@ export async function createUploadedVideo(input: {
   return hydrateCounts(store, video);
 }
 
-function applyVideoOrder(videos: FeedVideoItem[], order: string[]) {
-  if (!order.length) return videos;
-  const byId = new Map(videos.map((video) => [video.id, video]));
+function applyVideoOrder(videos: FeedVideoItem[], order: string[], hiddenIds: string[] = []) {
+  const hidden = new Set(hiddenIds);
+  const visibleVideos = videos.filter((video) => !hidden.has(video.id));
+  if (!order.length) return visibleVideos;
+  const byId = new Map(visibleVideos.map((video) => [video.id, video]));
   const ordered = order
     .map((id) => byId.get(id))
     .filter((video): video is FeedVideoItem => Boolean(video));
   const orderedIds = new Set(ordered.map((video) => video.id));
-  const rest = videos.filter((video) => !orderedIds.has(video.id));
+  const rest = visibleVideos.filter((video) => !orderedIds.has(video.id));
   return [...ordered, ...rest];
 }
 
@@ -246,7 +248,7 @@ export async function getHomeFeedVideos() {
     .filter((video) => video.isReady)
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((video) => hydrateCounts(store, video));
-  return applyVideoOrder(videos, store.contentSettings.homeVideoOrder);
+  return applyVideoOrder(videos, store.contentSettings.homeVideoOrder, store.contentSettings.homeVideoHiddenIds);
 }
 
 export async function getDiscoverFeedVideos() {
@@ -255,7 +257,7 @@ export async function getDiscoverFeedVideos() {
     .filter((video) => video.isReady)
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((video) => hydrateCounts(store, video));
-  return applyVideoOrder(videos, store.contentSettings.discoverVideoOrder);
+  return applyVideoOrder(videos, store.contentSettings.discoverVideoOrder, store.contentSettings.discoverVideoHiddenIds);
 }
 
 export async function getDiscoverCategories() {

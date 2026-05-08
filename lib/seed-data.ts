@@ -817,7 +817,9 @@ export function makeInitialStore(): StoreShape {
     featuredCases: {},
     contentSettings: {
       homeVideoOrder: [],
+      homeVideoHiddenIds: [],
       discoverVideoOrder: [],
+      discoverVideoHiddenIds: [],
       discoverCategories: defaultDiscoverCategories,
       featuredCaseOrder: [],
     },

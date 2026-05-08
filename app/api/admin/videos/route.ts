@@ -86,7 +86,9 @@ export async function PATCH(request: Request) {
 
   const next = await updateContentSettings({
     homeVideoOrder: Array.isArray(body.homeVideoOrder) ? body.homeVideoOrder.filter((id) => typeof id === "string") : undefined,
+    homeVideoHiddenIds: Array.isArray(body.homeVideoHiddenIds) ? body.homeVideoHiddenIds.filter((id) => typeof id === "string") : undefined,
     discoverVideoOrder: Array.isArray(body.discoverVideoOrder) ? body.discoverVideoOrder.filter((id) => typeof id === "string") : undefined,
+    discoverVideoHiddenIds: Array.isArray(body.discoverVideoHiddenIds) ? body.discoverVideoHiddenIds.filter((id) => typeof id === "string") : undefined,
     discoverCategories: sanitizeDiscoverCategories(body.discoverCategories),
     featuredCaseOrder: Array.isArray(body.featuredCaseOrder) ? body.featuredCaseOrder.filter((id) => typeof id === "string") : undefined,
   });

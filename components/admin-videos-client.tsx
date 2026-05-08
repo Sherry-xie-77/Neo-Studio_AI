@@ -54,7 +54,9 @@ export function AdminVideosClient({ locale }: { locale: Locale }) {
   const [message, setMessage] = useState("");
   const [snapshot, setSnapshot] = useState<AdminSnapshot | null>(null);
   const [homeOrder, setHomeOrder] = useState<string[]>([]);
+  const [homeHiddenIds, setHomeHiddenIds] = useState<string[]>([]);
   const [discoverOrder, setDiscoverOrder] = useState<string[]>([]);
+  const [discoverHiddenIds, setDiscoverHiddenIds] = useState<string[]>([]);
   const [discoverCategories, setDiscoverCategories] = useState<DiscoverCategory[]>([]);
   const [caseOrder, setCaseOrder] = useState<string[]>([]);
   const [createdVideo, setCreatedVideo] = useState<FeedVideoItem | null>(null);
@@ -69,7 +71,9 @@ export function AdminVideosClient({ locale }: { locale: Locale }) {
     const data = (await res.json()) as AdminSnapshot;
     setSnapshot(data);
     setHomeOrder(orderedIds(data.videos, data.contentSettings.homeVideoOrder));
+    setHomeHiddenIds(data.contentSettings.homeVideoHiddenIds ?? []);
     setDiscoverOrder(orderedIds(data.videos, data.contentSettings.discoverVideoOrder));
+    setDiscoverHiddenIds(data.contentSettings.discoverVideoHiddenIds ?? []);
     setDiscoverCategories(data.contentSettings.discoverCategories);
     setCaseOrder(orderedIds(data.featuredCases, data.contentSettings.featuredCaseOrder));
     return data;
@@ -213,8 +217,8 @@ export function AdminVideosClient({ locale }: { locale: Locale }) {
       {message ? <p className={status === "error" ? "text-sm text-[#ff748f]" : "text-sm text-[#b2e2ff]"}>{message}</p> : null}
 
       {tab === "upload" ? <UploadVideoForm locale={locale} status={status} createdVideo={createdVideo} onSubmit={handleVideoSubmit} /> : null}
-      {tab === "home" ? <OrderEditor locale={locale} videos={videos} order={homeOrder} setOrder={setHomeOrder} onSave={() => saveSettings({ homeVideoOrder: homeOrder })} /> : null}
-      {tab === "discover" ? <OrderEditor locale={locale} videos={videos} order={discoverOrder} setOrder={setDiscoverOrder} onSave={() => saveSettings({ discoverVideoOrder: discoverOrder })} /> : null}
+      {tab === "home" ? <OrderEditor locale={locale} videos={videos} order={homeOrder} setOrder={setHomeOrder} hiddenIds={homeHiddenIds} setHiddenIds={setHomeHiddenIds} onSave={() => saveSettings({ homeVideoOrder: homeOrder, homeVideoHiddenIds: homeHiddenIds })} /> : null}
+      {tab === "discover" ? <OrderEditor locale={locale} videos={videos} order={discoverOrder} setOrder={setDiscoverOrder} hiddenIds={discoverHiddenIds} setHiddenIds={setDiscoverHiddenIds} onSave={() => saveSettings({ discoverVideoOrder: discoverOrder, discoverVideoHiddenIds: discoverHiddenIds })} /> : null}
       {tab === "discover-categories" ? <DiscoverCategoryManager locale={locale} categories={discoverCategories} setCategories={setDiscoverCategories} onSave={() => saveSettings({ discoverCategories })} /> : null}
       {tab === "cases" ? <FeaturedCaseManager locale={locale} cases={cases} order={caseOrder} setOrder={setCaseOrder} onSubmit={handleCaseSubmit} onSave={() => saveSettings({ featuredCaseOrder: caseOrder })} /> : null}
     </div>
@@ -260,21 +264,58 @@ function UploadVideoForm({ locale, status, createdVideo, onSubmit }: { locale: L
   );
 }
 
-function OrderEditor({ locale, videos, order, setOrder, onSave }: { locale: Locale; videos: FeedVideoItem[]; order: string[]; setOrder: (ids: string[]) => void; onSave: () => void }) {
+function OrderEditor({ locale, videos, order, setOrder, hiddenIds, setHiddenIds, onSave }: { locale: Locale; videos: FeedVideoItem[]; order: string[]; setOrder: (ids: string[]) => void; hiddenIds: string[]; setHiddenIds: (ids: string[]) => void; onSave: () => void }) {
+  const zh = locale === "zh";
   const byId = new Map(videos.map((video) => [video.id, video]));
-  const ordered = order.map((id) => byId.get(id)).filter((video): video is FeedVideoItem => Boolean(video));
+  const hiddenSet = new Set(hiddenIds);
+  const visibleOrder = order.filter((id) => !hiddenSet.has(id));
+  const ordered = visibleOrder.map((id) => byId.get(id)).filter((video): video is FeedVideoItem => Boolean(video));
+  const hiddenVideos = hiddenIds.map((id) => byId.get(id)).filter((video): video is FeedVideoItem => Boolean(video));
+
+  function removeVideo(videoId: string) {
+    setOrder(order.filter((id) => id !== videoId));
+    setHiddenIds(hiddenIds.includes(videoId) ? hiddenIds : [...hiddenIds, videoId]);
+  }
+
+  function addVideo(videoId: string) {
+    setHiddenIds(hiddenIds.filter((id) => id !== videoId));
+    setOrder(order.includes(videoId) ? order : [...order, videoId]);
+  }
+
   return (
-    <div className="space-y-4 rounded-[28px] border border-[var(--avp-border)] bg-[rgba(255,255,255,0.03)] p-6">
+    <div className="space-y-5 rounded-[28px] border border-[var(--avp-border)] bg-[rgba(255,255,255,0.03)] p-6">
+      <div>
+        <h2 className="text-xl font-semibold text-[var(--avp-text)]">{zh ? "当前公开展示" : "Currently public"}</h2>
+        <p className="mt-2 text-sm leading-6 text-[var(--avp-text-muted)]">{zh ? "上移、下移、移除都只是暂存操作，点击下方保存按钮后才会生效。" : "Move and remove changes are staged first. They only take effect after you click save."}</p>
+      </div>
       <div className="grid gap-3">
         {ordered.map((video, index) => (
           <div key={video.id} className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-3 rounded-[18px] border border-[var(--avp-border)] bg-[rgba(255,255,255,0.03)] p-3">
             <div className="relative h-16 overflow-hidden rounded-[12px]"><Image src={video.posterUrl} alt={video.title[locale]} fill sizes="56px" className="object-cover" /></div>
             <div className="min-w-0"><p className="truncate font-semibold text-[var(--avp-text)]">{index + 1}. {video.title[locale]}</p><p className="text-xs text-[var(--avp-text-muted)]">{video.id} · {video.collection}</p></div>
-            <div className="flex gap-2"><SmallButton onClick={() => setOrder(moveItem(order, index, -1))}>↑</SmallButton><SmallButton onClick={() => setOrder(moveItem(order, index, 1))}>↓</SmallButton></div>
+            <div className="flex flex-wrap justify-end gap-2"><SmallButton onClick={() => setOrder(moveItem(visibleOrder, index, -1))}>↑</SmallButton><SmallButton onClick={() => setOrder(moveItem(visibleOrder, index, 1))}>↓</SmallButton><SmallButton onClick={() => removeVideo(video.id)}>{zh ? "移除" : "Remove"}</SmallButton></div>
           </div>
         ))}
       </div>
-      <PrimaryButton onClick={onSave}>{locale === "zh" ? "确认并保存排序" : "Confirm and save order"}</PrimaryButton>
+
+      <div className="rounded-[22px] border border-[var(--avp-border)] bg-[rgba(0,0,0,0.16)] p-4">
+        <h3 className="font-semibold text-[var(--avp-text)]">{zh ? "已移除，可添加回来" : "Removed, can be added back"}</h3>
+        {hiddenVideos.length ? (
+          <div className="mt-4 grid gap-3">
+            {hiddenVideos.map((video) => (
+              <div key={video.id} className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-3 rounded-[18px] border border-[var(--avp-border)] bg-[rgba(255,255,255,0.03)] p-3">
+                <div className="relative h-16 overflow-hidden rounded-[12px]"><Image src={video.posterUrl} alt={video.title[locale]} fill sizes="56px" className="object-cover" /></div>
+                <div className="min-w-0"><p className="truncate font-semibold text-[var(--avp-text)]">{video.title[locale]}</p><p className="text-xs text-[var(--avp-text-muted)]">{video.id} · {video.collection}</p></div>
+                <SmallButton onClick={() => addVideo(video.id)}>{zh ? "添加回来" : "Add back"}</SmallButton>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-[var(--avp-text-muted)]">{zh ? "目前没有被移除的视频。" : "No removed videos yet."}</p>
+        )}
+      </div>
+
+      <PrimaryButton onClick={onSave}>{zh ? "确认并保存当前设置" : "Confirm and save current settings"}</PrimaryButton>
     </div>
   );
 }
