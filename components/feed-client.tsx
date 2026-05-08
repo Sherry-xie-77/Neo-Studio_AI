@@ -338,7 +338,7 @@ export function FeedClient({
 
       <section
         className={cn(
-          "mb-12 grid grid-cols-1 gap-5 pb-16 md:grid-cols-[0.96fr_1.04fr] md:gap-4 md:pb-20",
+          "mb-12 grid grid-cols-1 gap-6 pb-16 md:grid-cols-2 md:gap-6 md:pb-20 lg:gap-8",
           showWatchCursor ? "cursor-none" : "",
         )}
         onPointerEnter={(event) => {
@@ -352,7 +352,7 @@ export function FeedClient({
         }}
       >
         <div
-          className="space-y-10 md:pt-12 transition-transform duration-300"
+          className="space-y-9 transition-transform duration-300 md:pt-10"
           style={{ transform: `translateY(${scrollY * 0.016}px)` }}
         >
           {leftColumnVideos.map((video) => (
@@ -371,7 +371,7 @@ export function FeedClient({
           ))}
         </div>
         <div
-          className="space-y-10 transition-transform duration-300 md:pt-32"
+          className="space-y-9 transition-transform duration-300 md:pt-20"
           style={{ transform: `translateY(${scrollY * 0.018}px)` }}
         >
           {rightColumnVideos.map((video) => (
@@ -849,7 +849,7 @@ function FeedVideoCard({
       onMouseLeave={handleMouseLeave}
       className={cn(
         "group relative overflow-hidden rounded-[18px] border border-[var(--avp-border)] bg-[var(--avp-surface-strong)] shadow-[0_22px_60px_rgba(0,0,0,0.28)] transition duration-500 hover:border-[var(--avp-border-strong)]",
-        index === 0 ? "md:ml-auto md:mr-0 md:w-[88%] lg:w-[86%]" : "md:mr-auto md:ml-0 md:w-[90%] lg:w-[88%]",
+        index === 0 ? "md:ml-auto md:mr-0 md:w-[92%] lg:w-[90%]" : "md:mr-auto md:ml-0 md:w-[92%] lg:w-[90%]",
       )}
       style={{
         transform: `perspective(1200px) rotateX(${tiltStyle.rotateX}deg) translateY(${tiltStyle.translateY}px) scale(${tiltStyle.scale})`,
