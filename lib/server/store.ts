@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+import { sql } from "@vercel/postgres";
 import { nanoid } from "nanoid";
 
 import { makeInitialStore } from "@/lib/seed-data";
@@ -24,6 +25,8 @@ import {
 
 const dataDir = path.join(process.cwd(), "data");
 const dataFile = path.join(dataDir, "generated", "mock-db.json");
+const usePostgresStore = Boolean(process.env.POSTGRES_URL || process.env.DATABASE_URL);
+let databaseReady = false;
 
 async function ensureStoreFile() {
   await fs.mkdir(path.dirname(dataFile), { recursive: true });
@@ -39,40 +42,41 @@ async function ensureStoreFile() {
   }
 }
 
-async function readStore(): Promise<StoreShape> {
-  await ensureStoreFile();
-  const content = await fs.readFile(dataFile, "utf8");
-  const parsed = JSON.parse(content) as Partial<StoreShape>;
+function normalizeStoreShape(store: Partial<StoreShape>): StoreShape {
   const initial = makeInitialStore();
 
   if (
-    !parsed.feedVideos ||
-    !parsed.templates ||
-    !parsed.comments ||
-    !parsed.likes ||
-    !parsed.generations ||
-    !parsed.sessions
+    !store.feedVideos ||
+    !store.templates ||
+    !store.comments ||
+    !store.likes ||
+    !store.generations ||
+    !store.sessions
   ) {
-    await writeStore(initial);
     return initial;
   }
 
-  if (!parsed.premiumOrders) {
-    parsed.premiumOrders = {};
-  }
-  if (!parsed.featuredCases) {
-    parsed.featuredCases = {};
-  }
-  if (!parsed.contentSettings) {
-    parsed.contentSettings = initial.contentSettings;
-  }
-  parsed.contentSettings = {
+  const contentSettings = {
     ...initial.contentSettings,
-    ...parsed.contentSettings,
-    discoverCategories: normalizeDiscoverCategories(parsed.contentSettings.discoverCategories),
+    ...(store.contentSettings ?? initial.contentSettings),
+    discoverCategories: normalizeDiscoverCategories(
+      store.contentSettings?.discoverCategories ?? initial.contentSettings.discoverCategories,
+    ),
   };
 
-  const hasRichFeedShape = Object.values(parsed.feedVideos).every(
+  const normalized: StoreShape = {
+    feedVideos: store.feedVideos,
+    templates: store.templates,
+    comments: store.comments,
+    likes: store.likes,
+    generations: store.generations,
+    sessions: store.sessions,
+    premiumOrders: store.premiumOrders ?? {},
+    featuredCases: store.featuredCases ?? {},
+    contentSettings,
+  };
+
+  const hasRichFeedShape = Object.values(normalized.feedVideos).every(
     (video) =>
       video &&
       typeof video === "object" &&
@@ -81,7 +85,7 @@ async function readStore(): Promise<StoreShape> {
       "useCases" in video &&
       "breakdownSteps" in video,
   );
-  const hasRichTemplateShape = Object.values(parsed.templates).every(
+  const hasRichTemplateShape = Object.values(normalized.templates).every(
     (template) =>
       template &&
       typeof template === "object" &&
@@ -91,25 +95,190 @@ async function readStore(): Promise<StoreShape> {
   );
 
   if (!hasRichFeedShape || !hasRichTemplateShape) {
-    const next: StoreShape = {
+    return {
       ...initial,
-      comments: parsed.comments ?? initial.comments,
-      likes: parsed.likes ?? initial.likes,
-      generations: parsed.generations ?? initial.generations,
-      sessions: parsed.sessions ?? initial.sessions,
-      premiumOrders: parsed.premiumOrders ?? initial.premiumOrders,
-      featuredCases: parsed.featuredCases ?? initial.featuredCases,
-      contentSettings: parsed.contentSettings ?? initial.contentSettings,
+      comments: normalized.comments,
+      likes: normalized.likes,
+      generations: normalized.generations,
+      sessions: normalized.sessions,
+      premiumOrders: normalized.premiumOrders,
+      featuredCases: normalized.featuredCases,
+      contentSettings: normalized.contentSettings,
     };
-    await writeStore(next);
-    return next;
   }
 
-  return parsed as StoreShape;
+  return normalized;
+}
+
+async function readFileStore(): Promise<StoreShape> {
+  await ensureStoreFile();
+  const content = await fs.readFile(dataFile, "utf8");
+  return normalizeStoreShape(JSON.parse(content) as Partial<StoreShape>);
+}
+
+async function writeFileStore(store: StoreShape) {
+  await fs.writeFile(dataFile, JSON.stringify(store, null, 2), "utf8");
+}
+
+async function ensureDatabase() {
+  if (databaseReady) return;
+
+  await sql`CREATE TABLE IF NOT EXISTS kv_store (
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`;
+  await sql`CREATE TABLE IF NOT EXISTS feed_videos (
+    id TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`;
+  await sql`CREATE TABLE IF NOT EXISTS templates (
+    slug TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`;
+  await sql`CREATE TABLE IF NOT EXISTS comments (
+    id TEXT PRIMARY KEY,
+    video_id TEXT NOT NULL,
+    value JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`;
+  await sql`CREATE TABLE IF NOT EXISTS likes (
+    id TEXT PRIMARY KEY,
+    video_id TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    value JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`;
+  await sql`CREATE TABLE IF NOT EXISTS generations (
+    id TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`;
+  await sql`CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`;
+  await sql`CREATE TABLE IF NOT EXISTS premium_orders (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    receipt TEXT NOT NULL,
+    value JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`;
+  await sql`CREATE TABLE IF NOT EXISTS featured_cases (
+    id TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`;
+
+  const existing = await sql<{ count: string }>`SELECT COUNT(*)::text AS count FROM feed_videos`;
+  databaseReady = true;
+  if (Number(existing.rows[0]?.count ?? 0) === 0) {
+    await writeDatabaseStore(makeInitialStore());
+  }
+}
+
+type JsonRow<T> = { value: T };
+
+async function readDatabaseStore(): Promise<StoreShape> {
+  await ensureDatabase();
+  const [
+    settingsResult,
+    videosResult,
+    templatesResult,
+    commentsResult,
+    likesResult,
+    generationsResult,
+    sessionsResult,
+    ordersResult,
+    casesResult,
+  ] = await Promise.all([
+    sql<JsonRow<ContentSettings>>`SELECT value FROM kv_store WHERE key = 'content_settings'`,
+    sql<JsonRow<FeedVideoItem>>`SELECT value FROM feed_videos`,
+    sql<JsonRow<VideoTemplate>>`SELECT value FROM templates`,
+    sql<JsonRow<VideoComment>>`SELECT value FROM comments`,
+    sql<JsonRow<VideoLike>>`SELECT value FROM likes`,
+    sql<JsonRow<GenerationRecord>>`SELECT value FROM generations`,
+    sql<JsonRow<{ id: string; createdAt: string; updatedAt: string }>>`SELECT value FROM sessions`,
+    sql<JsonRow<PremiumOrder>>`SELECT value FROM premium_orders`,
+    sql<JsonRow<FeaturedCase>>`SELECT value FROM featured_cases`,
+  ]);
+
+  return normalizeStoreShape({
+    feedVideos: Object.fromEntries(videosResult.rows.map((row) => [row.value.id, row.value])),
+    templates: Object.fromEntries(templatesResult.rows.map((row) => [row.value.slug, row.value])),
+    comments: Object.fromEntries(commentsResult.rows.map((row) => [row.value.id, row.value])),
+    likes: Object.fromEntries(likesResult.rows.map((row) => [row.value.id, row.value])),
+    generations: Object.fromEntries(generationsResult.rows.map((row) => [row.value.id, row.value])),
+    sessions: Object.fromEntries(sessionsResult.rows.map((row) => [row.value.id, row.value])),
+    premiumOrders: Object.fromEntries(ordersResult.rows.map((row) => [row.value.id, row.value])),
+    featuredCases: Object.fromEntries(casesResult.rows.map((row) => [row.value.id, row.value])),
+    contentSettings: settingsResult.rows[0]?.value,
+  });
+}
+
+async function upsertJson(table: string, keyColumn: string, key: string, value: unknown, extras: Record<string, string> = {}) {
+  const payload = JSON.stringify(value);
+  const extraColumns = Object.keys(extras);
+  const extraValues = Object.values(extras);
+
+  if (table === "feed_videos") {
+    await sql`INSERT INTO feed_videos (id, value) VALUES (${key}, ${payload}::jsonb) ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`;
+  } else if (table === "templates") {
+    await sql`INSERT INTO templates (slug, value) VALUES (${key}, ${payload}::jsonb) ON CONFLICT (slug) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`;
+  } else if (table === "comments") {
+    await sql`INSERT INTO comments (id, video_id, value) VALUES (${key}, ${extras.videoId ?? ""}, ${payload}::jsonb) ON CONFLICT (id) DO UPDATE SET video_id = EXCLUDED.video_id, value = EXCLUDED.value`;
+  } else if (table === "likes") {
+    await sql`INSERT INTO likes (id, video_id, session_id, value) VALUES (${key}, ${extras.videoId ?? ""}, ${extras.sessionId ?? ""}, ${payload}::jsonb) ON CONFLICT (id) DO UPDATE SET video_id = EXCLUDED.video_id, session_id = EXCLUDED.session_id, value = EXCLUDED.value`;
+  } else if (table === "generations") {
+    await sql`INSERT INTO generations (id, value) VALUES (${key}, ${payload}::jsonb) ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`;
+  } else if (table === "sessions") {
+    await sql`INSERT INTO sessions (id, value) VALUES (${key}, ${payload}::jsonb) ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`;
+  } else if (table === "premium_orders") {
+    await sql`INSERT INTO premium_orders (id, email, receipt, value) VALUES (${key}, ${extras.email ?? ""}, ${extras.receipt ?? ""}, ${payload}::jsonb) ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, receipt = EXCLUDED.receipt, value = EXCLUDED.value, updated_at = NOW()`;
+  } else if (table === "featured_cases") {
+    await sql`INSERT INTO featured_cases (id, value) VALUES (${key}, ${payload}::jsonb) ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`;
+  } else {
+    void keyColumn;
+    void extraColumns;
+    void extraValues;
+  }
+}
+
+async function writeDatabaseStore(store: StoreShape) {
+  await ensureDatabase();
+  await sql`INSERT INTO kv_store (key, value) VALUES ('content_settings', ${JSON.stringify(store.contentSettings)}::jsonb) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`;
+
+  await Promise.all([
+    ...Object.values(store.feedVideos).map((video) => upsertJson("feed_videos", "id", video.id, video)),
+    ...Object.values(store.templates).map((template) => upsertJson("templates", "slug", template.slug, template)),
+    ...Object.values(store.comments).map((comment) => upsertJson("comments", "id", comment.id, comment, { videoId: comment.videoId })),
+    ...Object.values(store.likes).map((like) => upsertJson("likes", "id", like.id, like, { videoId: like.videoId, sessionId: like.sessionId })),
+    ...Object.values(store.generations).map((generation) => upsertJson("generations", "id", generation.id, generation)),
+    ...Object.values(store.sessions).map((session) => upsertJson("sessions", "id", session.id, session)),
+    ...Object.values(store.premiumOrders).map((order) => upsertJson("premium_orders", "id", order.id, order, { email: order.email, receipt: order.receipt })),
+    ...Object.values(store.featuredCases).map((item) => upsertJson("featured_cases", "id", item.id, item)),
+  ]);
+}
+
+async function readStore(): Promise<StoreShape> {
+  return usePostgresStore ? readDatabaseStore() : readFileStore();
 }
 
 async function writeStore(store: StoreShape) {
-  await fs.writeFile(dataFile, JSON.stringify(store, null, 2), "utf8");
+  if (usePostgresStore) {
+    await writeDatabaseStore(store);
+    return;
+  }
+  await writeFileStore(store);
 }
 
 function hydrateCounts(store: StoreShape, video: FeedVideoItem): FeedVideoItem {

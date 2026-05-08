@@ -1,6 +1,4 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
+import { put } from "@vercel/blob";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 
@@ -38,13 +36,12 @@ function extensionFor(file: File) {
 }
 
 async function saveUpload(file: File, folder: "videos" | "posters" | "cases") {
-  const uploadDir = path.join(process.cwd(), "public", "uploads", folder);
-  await fs.mkdir(uploadDir, { recursive: true });
-  const filename = `${Date.now()}-${nanoid(10)}.${extensionFor(file)}`;
-  const target = path.join(uploadDir, filename);
-  const bytes = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(target, bytes);
-  return `/uploads/${folder}/${filename}`;
+  const filename = `uploads/${folder}/${Date.now()}-${nanoid(10)}.${extensionFor(file)}`;
+  const blob = await put(filename, file, {
+    access: "public",
+    addRandomSuffix: false,
+  });
+  return blob.url;
 }
 
 function sanitizeDiscoverCategories(value: unknown): DiscoverCategory[] | undefined {

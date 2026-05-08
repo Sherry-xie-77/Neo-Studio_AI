@@ -45,3 +45,4 @@ public/media/showcase/
 
 # runtime-generated local data
 data/generated/
+.env*.local
