@@ -397,40 +397,40 @@ export function FeedClient({
       <section className="mb-10 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)_220px] lg:items-start">
         <div className="space-y-3 pt-2">
           <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--avp-text-muted)]">
-            {locale === "zh" ? "广告素材 + 短剧增长" : "ADS + DRAMA GROWTH"}
+            {locale === "zh" ? "百万曝光 · 真实出单" : "MILLIONS OF VIEWS · REAL SALES"}
           </p>
           <p className="text-sm leading-7 text-[var(--avp-text-muted)]">
             {locale === "zh"
-              ? "你只要给产品、平台和目标，我们把卖点变成能投放的 UGC、TVC 或连续短剧。"
-              : "Send your product, platform, and goal. We’ll turn it into UGC ads, TVC-style spots, or serial drama content ready to launch."}
+              ? "已经帮上百个品牌跑出单条破百万播放、单月翻倍出单的爆款素材，下一个就是你的产品。"
+              : "We've helped 100+ brands ship creatives that crossed 1M+ views and doubled monthly orders. Your product is next."}
           </p>
         </div>
 
         <div className="space-y-4 text-center">
           <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--avp-text-muted)]">
-            {locale === "zh" ? "让内容直接变成订单" : "CONTENT THAT CONVERTS"}
+            {locale === "zh" ? "今天下单，最快 7 天上线投放" : "ORDER TODAY · LIVE IN 7 DAYS"}
           </p>
           <h1 className="text-4xl font-semibold uppercase leading-none text-[var(--avp-text)] sm:text-5xl lg:text-6xl">
-            {locale === "zh" ? "给你的产品做一套能卖货的视频内容" : "Give your product videos built to sell"}
+            {locale === "zh" ? "在这里做的视频，都是百万曝光起步的爆款" : "Videos built here go viral and sell"}
           </h1>
           <p className="mx-auto max-w-xl text-sm leading-7 text-[var(--avp-text-muted)]">
             {locale === "zh"
-              ? "从 UGC 带货、TVC 质感广告到定制短剧，帮你用更强钩子、更清楚的购买理由，提高点击、询盘和下单。"
-              : "From UGC ads and TVC-style spots to custom dramas, we craft sharper hooks and clearer reasons to buy so more viewers click, ask, and order."}
+              ? "我们做的不是普通广告，是能让用户停下来、想买、马上下单的爆款视频。UGC 带货、TVC 质感大片、品牌短剧三合一，帮你打爆 TikTok、Reels、Shorts 和 Amazon 详情页。"
+              : "We don't ship generic ads. We ship scroll-stopping, sell-now creatives — UGC, TVC, and branded drama — that blow up on TikTok, Reels, Shorts, and Amazon listings."}
           </p>
           <button type="button" onClick={() => setShowCustomAdPricing(true)} className="inline-flex min-h-[46px] items-center justify-center rounded-full bg-[var(--avp-text)] px-5 text-sm font-bold text-[#061a36] shadow-[0_18px_42px_rgba(178,226,255,0.18)] transition hover:-translate-y-0.5">
-            {locale === "zh" ? "查看付费方案" : "See paid packages"}
+            {locale === "zh" ? "立即下单做爆款" : "Order my viral video"}
           </button>
         </div>
 
         <div className="space-y-3 pt-2 text-right">
           <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--avp-text-muted)]">
-            {locale === "zh" ? "先测转化，再放大" : "TEST, THEN SCALE"}
+            {locale === "zh" ? "下单即排期 · 名额有限" : "BOOKED FAST · LIMITED SLOTS"}
           </p>
           <p className="text-sm leading-7 text-[var(--avp-text-muted)]">
             {locale === "zh"
-              ? "适合电商品牌、跨境卖家、本地商家和内容账号，用于 TikTok、Reels、Shorts、官网和广告投放。"
-              : "Built for ecommerce brands, cross-border sellers, local businesses, and creator accounts on TikTok, Reels, Shorts, websites, and paid ads."}
+              ? "电商品牌、跨境卖家、本地商家、内容账号都在用，每周接单名额有限，付款即锁定档期。"
+              : "Used by ecommerce brands, cross-border sellers, local businesses, and creator accounts. Weekly slots are limited — payment locks your spot."}
           </p>
         </div>
       </section>
@@ -442,41 +442,41 @@ export function FeedClient({
           <div className="space-y-5">
             <div className="space-y-3">
               <p className="text-[11px] uppercase tracking-[0.32em] text-[#285084]">
-                {locale === "zh" ? "付费定制内容" : "PAID CUSTOM CONTENT"}
+                {locale === "zh" ? "百万曝光 · 出单加速" : "MILLIONS OF VIEWS · MORE ORDERS"}
               </p>
               <h2 className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
-                {locale === "zh" ? "别只发视频，做一套能带来询盘和订单的内容" : "Don’t just post videos. Launch content that brings leads and orders."}
+                {locale === "zh" ? "$12.99 起，让你的产品上热门、出大单" : "From $12.99 — go viral, sell more, today."}
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-[#17345d] sm:text-base">
                 {locale === "zh"
-                  ? "你提供产品和目标平台，我们负责拆卖点、写脚本，做成 UGC 带货广告、TVC 质感广告或品牌短剧。适合想快速测试投放素材，也适合想用连续剧情长期涨粉和转化的品牌。"
-                  : "Send your product and target platform. We shape the selling points into UGC commerce ads, TVC-style spots, or a branded drama series for faster ad testing and longer-term audience growth."}
+                  ? "把产品扔给我们，48 小时拿到能直接投放的爆款视频脚本和成片。UGC 带货、TVC 质感大片、20 集品牌短剧任选；已经帮上百个品牌跑出百万播放、订单翻倍。每周名额有限，付款即排期。"
+                  : "Send us your product. In 48h you'll get viral-ready scripts and finished creatives — UGC, TVC, or a 20-episode branded drama. 100+ brands hit 1M+ views and doubled their orders. Weekly slots are limited — payment locks your spot."}
               </p>
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
               {[
                 {
-                  zh: "UGC 带货广告",
-                  en: "UGC commerce ads",
-                  descZh: "适合马上测产品卖点，用真实用户口吻讲清楚为什么值得买。",
-                  descEn: "Test product angles fast with real-customer style scripts that make the reason to buy clear.",
+                  zh: "UGC 带货爆款",
+                  en: "UGC viral commerce",
+                  descZh: "真实用户口吻、强钩子开头，让用户停下来想买。已跑出多条单条破百万播放的爆款。",
+                  descEn: "Real-customer hooks that stop the scroll. Past creatives have crossed 1M+ views and lifted CTR.",
                 },
                 {
                   zh: "定制短剧",
                   en: "Custom drama",
-                  descZh: "20 集品牌剧情，把产品自然植入故事，用连续内容持续涨粉、种草和转化。",
-                  descEn: "20 branded episodes that weave your product into a story for ongoing followers, demand, and conversions.",
+                  descZh: "20 集品牌剧情，把产品自然植入故事，连续追更带来稳定涨粉和复购，长期账号增长首选。",
+                  descEn: "20 branded episodes that turn your product into a story viewers come back for, driving steady follower growth and reorders.",
                 },
                 {
-                  zh: "TVC 质感广告",
-                  en: "TVC-style polish",
-                  descZh: "适合官网、投放页和品牌展示，用更高级的画面提升信任感。",
-                  descEn: "Upgrade landing pages and brand moments with polished visuals that build trust.",
+                  zh: "TVC 质感大片",
+                  en: "TVC-quality films",
+                  descZh: "电影级画面 + 强转化结构，用在官网、投放页和详情页，让客单价更高、退货更少。",
+                  descEn: "Cinematic visuals built around a conversion script — perfect for landing pages and listings, lifting AOV and trust.",
                 },
               ].map((item) => (
                 <div key={item.zh} className="rounded-[24px] border border-[#0d3d7b]/15 bg-white/52 p-4 shadow-[0_18px_46px_rgba(6,26,54,0.08)]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#285084]">{locale === "zh" ? "可下单方向" : "ORDER OPTIONS"}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#285084]">{locale === "zh" ? "立即下单" : "ORDER NOW"}</p>
                   <h3 className="mt-3 text-2xl font-semibold text-[#061a36]">
                     {locale === "zh" ? item.zh : item.en}
                   </h3>
@@ -488,7 +488,7 @@ export function FeedClient({
             </div>
 
             <button type="button" onClick={() => setShowCustomAdPricing(true)} className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-[#061a36] px-5 text-sm font-bold text-white shadow-[0_18px_42px_rgba(6,26,54,0.22)] transition hover:-translate-y-0.5">
-              {locale === "zh" ? "选择广告 / 短剧套餐" : "Choose ads or drama package"}
+              {locale === "zh" ? "立即下单做爆款" : "Order my viral video"}
             </button>
           </div>
 
@@ -705,15 +705,15 @@ export function FeedClient({
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.32em] text-[#285084]">
-                  {locale === "zh" ? "选择定制套餐" : "CHOOSE YOUR PACKAGE"}
+                  {locale === "zh" ? "今天下单 · 7 天交付" : "ORDER TODAY · DELIVERED IN 7 DAYS"}
                 </p>
                 <h2 className="mt-2 text-3xl font-semibold leading-tight sm:text-4xl">
-                  {locale === "zh" ? "选择广告或短剧套餐" : "Choose an ad or drama package"}
+                  {locale === "zh" ? "选一个套餐，把产品做成下一个百万爆款" : "Pick a package and turn your product into the next viral hit"}
                 </h2>
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-[#17345d]">
                   {locale === "zh"
-                    ? "小预算先测试 UGC/TVC 广告，想长期做账号增长可以选择 20 集定制短剧。付款后提交产品图片、目标平台和需求，我们按 brief 制作并交付。"
-                    : "Start small with UGC/TVC ad tests, or pick the 20-episode custom drama for longer-term account growth. After payment, submit your product images, platform, and brief for delivery."}
+                    ? "$12.99 起就能跑出第一条爆款，长期账号增长选 20 集定制短剧。付款立即排期，提交产品图和投放目标，我们按 brief 制作并交付能直接投放的成片。"
+                    : "Ship your first viral creative from $12.99, or lock long-term growth with the 20-episode custom drama. Payment locks your slot — send product images and goals and we deliver ad-ready cuts."}
                 </p>
               </div>
               <button type="button" onClick={() => { setShowCustomAdPricing(false); setRevealedPriceIds({}); }} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#0d3d7b]/15 bg-white/60 text-lg font-semibold text-[#061a36] transition hover:bg-white/85" aria-label={locale === "zh" ? "关闭报价窗口" : "Close pricing modal"}>
