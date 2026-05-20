@@ -25,6 +25,52 @@ type FeedClientProps = {
   };
 };
 
+const briefFormula = ["Product", "Platform", "Quantity", "Style", "Materials", "Goal", "Timeline"];
+
+const customAdPackages = [
+  {
+    name: { zh: "入门试投", en: "Starter Test" },
+    quantity: { zh: "3 条广告视频", en: "3 ad videos" },
+    price: "$12.99",
+    href: "https://buy.stripe.com/6oU5kE1F24ZWgiBeT39AA03",
+    description: {
+      zh: "先用 3 条素材验证一个产品卖点，适合低成本测试点击、询盘和下单意愿。",
+      en: "Validate one product angle with 3 low-cost creatives built to test clicks, leads, and purchase intent.",
+    },
+  },
+  {
+    name: { zh: "爆款测试", en: "Hook Test" },
+    quantity: { zh: "5 条广告视频", en: "5 ad videos" },
+    price: "$19.99",
+    href: "https://buy.stripe.com/cNi6oIbfC640fex6mx9AA04",
+    description: {
+      zh: "一次测试多个开头、痛点和购买理由，更快找到值得加预算的素材方向。",
+      en: "Test more hooks, pain points, and reasons to buy so you can spot the creative worth scaling.",
+    },
+  },
+  {
+    name: { zh: "批量投放", en: "Scale Pack" },
+    quantity: { zh: "10 条广告视频", en: "10 ad videos" },
+    price: "$39.99",
+    href: "https://buy.stripe.com/3cI5kE0AYcso0jD9yJ9AA05",
+    description: {
+      zh: "给 TikTok、Reels、Shorts 和广告账户准备一组可轮换素材，持续测出更高转化。",
+      en: "Stock TikTok, Reels, Shorts, and ad accounts with rotating creatives for stronger conversion tests.",
+    },
+  },
+  {
+    name: { zh: "定制短剧", en: "Custom Drama" },
+    quantity: { zh: "20 集品牌短剧", en: "20 branded drama episodes" },
+    price: "$699",
+    href: "/custom-ads/brief",
+    cta: { zh: "定制短剧", en: "Customize drama" },
+    description: {
+      zh: "把产品写进连续剧情，用 20 集内容持续种草、涨粉和转化，适合品牌账号长期投放。",
+      en: "Turn your product into a 20-episode story that builds demand, followers, and conversions over time.",
+    },
+  },
+];
+
 type CommentState = {
   nickname: string;
   body: string;
@@ -67,6 +113,7 @@ export function FeedClient({
   const [showWatchCursor, setShowWatchCursor] = useState(false);
   const [cursorScale, setCursorScale] = useState(1);
   const [scrollY, setScrollY] = useState(0);
+  const [showCustomAdPricing, setShowCustomAdPricing] = useState(false);
   const lastTriggerButtonRef = useRef<HTMLButtonElement | null>(null);
   const watchCursorRef = useRef<HTMLDivElement | null>(null);
   const cursorPositionRef = useRef({ x: 0, y: 0 });
@@ -301,38 +348,118 @@ export function FeedClient({
       <section className="mb-10 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)_220px] lg:items-start">
         <div className="space-y-3 pt-2">
           <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--avp-text-muted)]">
-            {locale === "zh" ? "爆款视频入口" : "VIRAL VIDEO ENTRY"}
+            {locale === "zh" ? "广告素材 + 短剧增长" : "ADS + DRAMA GROWTH"}
           </p>
           <p className="text-sm leading-7 text-[var(--avp-text-muted)]">
             {locale === "zh"
-              ? "想做爆款短视频、接广告、拿流量变现，就从这里找方向、拆模板、快速开做。"
-              : "If you want viral short-form videos that drive traffic, ads, and monetization, start here to study the pattern and build faster."}
+              ? "你只要给产品、平台和目标，我们把卖点变成能投放的 UGC、TVC 或连续短剧。"
+              : "Send your product, platform, and goal. We’ll turn it into UGC ads, TVC-style spots, or serial drama content ready to launch."}
           </p>
         </div>
 
-        <div className="space-y-3 text-center">
+        <div className="space-y-4 text-center">
           <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--avp-text-muted)]">
-            {locale === "zh" ? "爆款案例观察" : "VIRAL CASE WATCH"}
+            {locale === "zh" ? "让内容直接变成订单" : "CONTENT THAT CONVERTS"}
           </p>
           <h1 className="text-4xl font-semibold uppercase leading-none text-[var(--avp-text)] sm:text-5xl lg:text-6xl">
-            {activeVideo?.title[locale] ?? (locale === "zh" ? "精选视频" : "Featured video")}
+            {locale === "zh" ? "给你的产品做一套能卖货的视频内容" : "Give your product videos built to sell"}
           </h1>
           <p className="mx-auto max-w-xl text-sm leading-7 text-[var(--avp-text-muted)]">
             {locale === "zh"
-              ? "先看什么内容能火，再一键复刻、自由创作，把流量做成结果。"
-              : "Study what can win attention first, then remake it or create from scratch and turn views into outcomes."}
+              ? "从 UGC 带货、TVC 质感广告到 20 集定制短剧，帮你用更强钩子、更清楚的购买理由，提高点击、询盘和下单。"
+              : "From UGC ads and TVC-style spots to 20-episode custom dramas, we craft sharper hooks and clearer reasons to buy so more viewers click, ask, and order."}
           </p>
+          <button type="button" onClick={() => setShowCustomAdPricing(true)} className="inline-flex min-h-[46px] items-center justify-center rounded-full bg-[var(--avp-text)] px-5 text-sm font-bold text-[#061a36] shadow-[0_18px_42px_rgba(178,226,255,0.18)] transition hover:-translate-y-0.5">
+            {locale === "zh" ? "查看付费方案" : "See paid packages"}
+          </button>
         </div>
 
         <div className="space-y-3 pt-2 text-right">
           <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--avp-text-muted)]">
-            {locale === "zh" ? "赚钱型工作流" : "MONETIZATION FLOW"}
+            {locale === "zh" ? "先测转化，再放大" : "TEST, THEN SCALE"}
           </p>
           <p className="text-sm leading-7 text-[var(--avp-text-muted)]">
             {locale === "zh"
-              ? "从找灵感、看爆款、拆镜头，到生成成片，这里就是把内容做成收入的整条链路。"
-              : "From inspiration and viral references to final generation, this is the full pipeline for turning content into revenue."}
+              ? "适合电商品牌、跨境卖家、本地商家和内容账号，用于 TikTok、Reels、Shorts、官网和广告投放。"
+              : "Built for ecommerce brands, cross-border sellers, local businesses, and creator accounts on TikTok, Reels, Shorts, websites, and paid ads."}
           </p>
+        </div>
+      </section>
+
+      <div id="custom-ads" className="scroll-mt-24" />
+
+      <section id="paywall" className="mb-12 scroll-mt-24 overflow-hidden rounded-[32px] border border-[rgba(178,226,255,0.24)] bg-[linear-gradient(135deg,rgba(247,251,255,0.96),rgba(191,226,255,0.88)_46%,rgba(139,125,255,0.78))] p-5 text-[#061a36] shadow-[0_28px_80px_rgba(79,153,255,0.26)] sm:p-7">
+        <div className="grid gap-7 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-[11px] uppercase tracking-[0.32em] text-[#285084]">
+                {locale === "zh" ? "付费定制内容" : "PAID CUSTOM CONTENT"}
+              </p>
+              <h2 className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
+                {locale === "zh" ? "别只发视频，做一套能带来询盘和订单的内容" : "Don’t just post videos. Launch content that brings leads and orders."}
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-[#17345d] sm:text-base">
+                {locale === "zh"
+                  ? "你提供产品和目标平台，我们负责拆卖点、写脚本、做成 UGC 带货广告、TVC 质感广告或 20 集品牌短剧。适合想快速测试投放素材，也适合想用连续剧情长期涨粉和转化的品牌。"
+                  : "Send your product and target platform. We shape the selling points into UGC commerce ads, TVC-style spots, or a 20-episode branded drama for faster ad testing and longer-term audience growth."}
+              </p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {[
+                {
+                  zh: "UGC 带货广告",
+                  en: "UGC commerce ads",
+                  descZh: "适合马上测产品卖点，用真实用户口吻讲清楚为什么值得买。",
+                  descEn: "Test product angles fast with real-customer style scripts that make the reason to buy clear.",
+                },
+                {
+                  zh: "$699 定制短剧",
+                  en: "$699 custom drama",
+                  descZh: "20 集品牌剧情，把产品自然植入故事，用连续内容持续涨粉、种草和转化。",
+                  descEn: "20 branded episodes that weave your product into a story for ongoing followers, demand, and conversions.",
+                },
+                {
+                  zh: "TVC 质感广告",
+                  en: "TVC-style polish",
+                  descZh: "适合官网、投放页和品牌展示，用更高级的画面提升信任感。",
+                  descEn: "Upgrade landing pages and brand moments with polished visuals that build trust.",
+                },
+              ].map((item) => (
+                <div key={item.zh} className="rounded-[24px] border border-[#0d3d7b]/15 bg-white/52 p-4 shadow-[0_18px_46px_rgba(6,26,54,0.08)]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#285084]">{locale === "zh" ? "可下单方向" : "ORDER OPTIONS"}</p>
+                  <h3 className="mt-3 text-2xl font-semibold text-[#061a36]">
+                    {locale === "zh" ? item.zh : item.en}
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-[#17345d]">
+                    {locale === "zh" ? item.descZh : item.descEn}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <button type="button" onClick={() => setShowCustomAdPricing(true)} className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-[#061a36] px-5 text-sm font-bold text-white shadow-[0_18px_42px_rgba(6,26,54,0.22)] transition hover:-translate-y-0.5">
+              {locale === "zh" ? "选择广告 / 短剧套餐" : "Choose ads or drama package"}
+            </button>
+          </div>
+
+          <div className="rounded-[26px] border border-[#0d3d7b]/15 bg-white/44 p-4">
+            <p className="text-xs uppercase tracking-[0.22em] text-[#285084]">
+              {locale === "zh" ? "付款后提交需求" : "AFTER PAYMENT"}
+            </p>
+            <p className="mt-3 text-sm leading-6 text-[#17345d]">
+              {locale === "zh"
+                ? "付款成功后会进入需求提交页，再打开邮件模板发送产品图片、购买套餐和投放需求。"
+                : "After successful payment, continue to the brief page to open the email template and send product images, package details, and campaign requirements."}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {briefFormula.map((item) => (
+                <span key={item} className="rounded-full border border-[#0d3d7b]/14 bg-white/48 px-3 py-1.5 text-xs font-semibold text-[#061a36]">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -481,6 +608,64 @@ export function FeedClient({
           </form>
         </div>
       </div>
+
+      {showCustomAdPricing ? (
+        <div className="fixed inset-0 z-[80] flex items-end justify-center bg-[#020814]/70 px-4 pb-4 backdrop-blur-sm sm:items-center sm:pb-0">
+          <div className="max-h-[88vh] w-full max-w-5xl overflow-y-auto rounded-[32px] border border-[rgba(178,226,255,0.24)] bg-[linear-gradient(135deg,rgba(247,251,255,0.98),rgba(191,226,255,0.94)_52%,rgba(139,125,255,0.86))] p-5 text-[#061a36] shadow-[0_32px_90px_rgba(0,0,0,0.34)] sm:p-7">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.32em] text-[#285084]">
+                  {locale === "zh" ? "选择定制套餐" : "CHOOSE YOUR PACKAGE"}
+                </p>
+                <h2 className="mt-2 text-3xl font-semibold leading-tight sm:text-4xl">
+                  {locale === "zh" ? "选择广告或短剧套餐" : "Choose an ad or drama package"}
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-[#17345d]">
+                  {locale === "zh"
+                    ? "小预算先测试 UGC/TVC 广告，想长期做账号增长就选择 $699 的 20 集定制短剧。付款后提交产品图片、目标平台和需求，我们按 brief 制作并交付。"
+                    : "Start small with UGC/TVC ad tests, or choose the $699 20-episode custom drama for longer-term account growth. After payment, submit your product images, platform, and brief for delivery."}
+                </p>
+              </div>
+              <button type="button" onClick={() => setShowCustomAdPricing(false)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#0d3d7b]/15 bg-white/60 text-lg font-semibold text-[#061a36] transition hover:bg-white/85" aria-label={locale === "zh" ? "关闭报价窗口" : "Close pricing modal"}>
+                ×
+              </button>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {customAdPackages.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href.startsWith("/") ? `${item.href}?lang=${locale}` : item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex min-h-[238px] flex-col justify-between rounded-[24px] border border-[#0d3d7b]/15 bg-white/62 p-4 shadow-[0_18px_46px_rgba(6,26,54,0.1)] transition hover:-translate-y-0.5 hover:bg-white/82"
+                >
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#285084]">{item.name[locale]}</p>
+                    <h3 className="mt-3 text-2xl font-semibold text-[#061a36]">{item.quantity[locale]}</h3>
+                    <p className="mt-2 text-3xl font-bold text-[#0d3d7b]">{item.price}</p>
+                    <p className="mt-3 text-sm leading-6 text-[#17345d]">{item.description[locale]}</p>
+                  </div>
+                  <span className="mt-5 inline-flex min-h-[42px] items-center justify-center rounded-full bg-[#061a36] px-4 text-sm font-bold text-white transition group-hover:translate-y-[-1px]">
+                    {item.cta?.[locale] ?? (locale === "zh" ? "立即购买" : "Buy now")}
+                  </span>
+                </a>
+              ))}
+            </div>
+
+            <div className="mt-5 rounded-[24px] border border-[#0d3d7b]/15 bg-white/46 p-4">
+              <p className="text-xs uppercase tracking-[0.22em] text-[#285084]">
+                {locale === "zh" ? "付款后提交需求" : "AFTER PAYMENT"}
+              </p>
+              <p className="mt-3 text-sm leading-6 text-[#17345d]">
+                {locale === "zh"
+                  ? "付款成功后进入需求提交页，再打开邮件模板发送产品图片、购买套餐和投放需求。"
+                  : "After successful payment, continue to the brief page to open the email template and send product images, package details, and campaign requirements."}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <section className="mt-52 pt-8 space-y-8">
         <div className="flex items-start justify-between gap-6">
