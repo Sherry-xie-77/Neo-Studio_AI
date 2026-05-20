@@ -27,8 +27,20 @@ type FeedClientProps = {
 
 const briefFormula = ["Product", "Platform", "Quantity", "Style", "Materials", "Goal", "Timeline"];
 
-const customAdPackages = [
+type CustomAdPackage = {
+  id: string;
+  name: { zh: string; en: string };
+  quantity: { zh: string; en: string };
+  price: string;
+  href: string;
+  cta?: { zh: string; en: string };
+  description: { zh: string; en: string };
+  revealPriceOnClick?: boolean;
+};
+
+const customAdPackages: CustomAdPackage[] = [
   {
+    id: "starter",
     name: { zh: "入门试投", en: "Starter Test" },
     quantity: { zh: "3 条广告视频", en: "3 ad videos" },
     price: "$12.99",
@@ -39,6 +51,7 @@ const customAdPackages = [
     },
   },
   {
+    id: "hook",
     name: { zh: "爆款测试", en: "Hook Test" },
     quantity: { zh: "5 条广告视频", en: "5 ad videos" },
     price: "$19.99",
@@ -49,6 +62,7 @@ const customAdPackages = [
     },
   },
   {
+    id: "scale",
     name: { zh: "批量投放", en: "Scale Pack" },
     quantity: { zh: "10 条广告视频", en: "10 ad videos" },
     price: "$39.99",
@@ -59,6 +73,7 @@ const customAdPackages = [
     },
   },
   {
+    id: "drama",
     name: { zh: "定制短剧", en: "Custom Drama" },
     quantity: { zh: "20 集品牌短剧", en: "20 branded drama episodes" },
     price: "$699",
@@ -68,6 +83,7 @@ const customAdPackages = [
       zh: "把产品写进连续剧情，用 20 集内容持续种草、涨粉和转化，适合品牌账号长期投放。",
       en: "Turn your product into a 20-episode story that builds demand, followers, and conversions over time.",
     },
+    revealPriceOnClick: true,
   },
 ];
 
@@ -114,6 +130,7 @@ export function FeedClient({
   const [cursorScale, setCursorScale] = useState(1);
   const [scrollY, setScrollY] = useState(0);
   const [showCustomAdPricing, setShowCustomAdPricing] = useState(false);
+  const [revealedPriceIds, setRevealedPriceIds] = useState<Record<string, boolean>>({});
   const lastTriggerButtonRef = useRef<HTMLButtonElement | null>(null);
   const watchCursorRef = useRef<HTMLDivElement | null>(null);
   const cursorPositionRef = useRef({ x: 0, y: 0 });
@@ -398,8 +415,8 @@ export function FeedClient({
           </h1>
           <p className="mx-auto max-w-xl text-sm leading-7 text-[var(--avp-text-muted)]">
             {locale === "zh"
-              ? "从 UGC 带货、TVC 质感广告到 20 集定制短剧，帮你用更强钩子、更清楚的购买理由，提高点击、询盘和下单。"
-              : "From UGC ads and TVC-style spots to 20-episode custom dramas, we craft sharper hooks and clearer reasons to buy so more viewers click, ask, and order."}
+              ? "从 UGC 带货、TVC 质感广告到定制短剧，帮你用更强钩子、更清楚的购买理由，提高点击、询盘和下单。"
+              : "From UGC ads and TVC-style spots to custom dramas, we craft sharper hooks and clearer reasons to buy so more viewers click, ask, and order."}
           </p>
           <button type="button" onClick={() => setShowCustomAdPricing(true)} className="inline-flex min-h-[46px] items-center justify-center rounded-full bg-[var(--avp-text)] px-5 text-sm font-bold text-[#061a36] shadow-[0_18px_42px_rgba(178,226,255,0.18)] transition hover:-translate-y-0.5">
             {locale === "zh" ? "查看付费方案" : "See paid packages"}
@@ -432,8 +449,8 @@ export function FeedClient({
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-[#17345d] sm:text-base">
                 {locale === "zh"
-                  ? "你提供产品和目标平台，我们负责拆卖点、写脚本、做成 UGC 带货广告、TVC 质感广告或 20 集品牌短剧。适合想快速测试投放素材，也适合想用连续剧情长期涨粉和转化的品牌。"
-                  : "Send your product and target platform. We shape the selling points into UGC commerce ads, TVC-style spots, or a 20-episode branded drama for faster ad testing and longer-term audience growth."}
+                  ? "你提供产品和目标平台，我们负责拆卖点、写脚本，做成 UGC 带货广告、TVC 质感广告或品牌短剧。适合想快速测试投放素材，也适合想用连续剧情长期涨粉和转化的品牌。"
+                  : "Send your product and target platform. We shape the selling points into UGC commerce ads, TVC-style spots, or a branded drama series for faster ad testing and longer-term audience growth."}
               </p>
             </div>
 
@@ -446,8 +463,8 @@ export function FeedClient({
                   descEn: "Test product angles fast with real-customer style scripts that make the reason to buy clear.",
                 },
                 {
-                  zh: "$699 定制短剧",
-                  en: "$699 custom drama",
+                  zh: "定制短剧",
+                  en: "Custom drama",
                   descZh: "20 集品牌剧情，把产品自然植入故事，用连续内容持续涨粉、种草和转化。",
                   descEn: "20 branded episodes that weave your product into a story for ongoing followers, demand, and conversions.",
                 },
@@ -695,35 +712,66 @@ export function FeedClient({
                 </h2>
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-[#17345d]">
                   {locale === "zh"
-                    ? "小预算先测试 UGC/TVC 广告，想长期做账号增长就选择 $699 的 20 集定制短剧。付款后提交产品图片、目标平台和需求，我们按 brief 制作并交付。"
-                    : "Start small with UGC/TVC ad tests, or choose the $699 20-episode custom drama for longer-term account growth. After payment, submit your product images, platform, and brief for delivery."}
+                    ? "小预算先测试 UGC/TVC 广告，想长期做账号增长可以选择 20 集定制短剧。付款后提交产品图片、目标平台和需求，我们按 brief 制作并交付。"
+                    : "Start small with UGC/TVC ad tests, or pick the 20-episode custom drama for longer-term account growth. After payment, submit your product images, platform, and brief for delivery."}
                 </p>
               </div>
-              <button type="button" onClick={() => setShowCustomAdPricing(false)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#0d3d7b]/15 bg-white/60 text-lg font-semibold text-[#061a36] transition hover:bg-white/85" aria-label={locale === "zh" ? "关闭报价窗口" : "Close pricing modal"}>
+              <button type="button" onClick={() => { setShowCustomAdPricing(false); setRevealedPriceIds({}); }} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#0d3d7b]/15 bg-white/60 text-lg font-semibold text-[#061a36] transition hover:bg-white/85" aria-label={locale === "zh" ? "关闭报价窗口" : "Close pricing modal"}>
                 ×
               </button>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              {customAdPackages.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href.startsWith("/") ? `${item.href}?lang=${locale}` : item.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group flex min-h-[238px] flex-col justify-between rounded-[24px] border border-[#0d3d7b]/15 bg-white/62 p-4 shadow-[0_18px_46px_rgba(6,26,54,0.1)] transition hover:-translate-y-0.5 hover:bg-white/82"
-                >
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#285084]">{item.name[locale]}</p>
-                    <h3 className="mt-3 text-2xl font-semibold text-[#061a36]">{item.quantity[locale]}</h3>
-                    <p className="mt-2 text-3xl font-bold text-[#0d3d7b]">{item.price}</p>
-                    <p className="mt-3 text-sm leading-6 text-[#17345d]">{item.description[locale]}</p>
-                  </div>
-                  <span className="mt-5 inline-flex min-h-[42px] items-center justify-center rounded-full bg-[#061a36] px-4 text-sm font-bold text-white transition group-hover:translate-y-[-1px]">
-                    {item.cta?.[locale] ?? (locale === "zh" ? "立即购买" : "Buy now")}
-                  </span>
-                </a>
-              ))}
+              {customAdPackages.map((item) => {
+                const isRevealPackage = Boolean(item.revealPriceOnClick);
+                const isRevealed = Boolean(revealedPriceIds[item.id]);
+                const targetHref = item.href.startsWith("/") ? `${item.href}?lang=${locale}` : item.href;
+                const cardClass = "group flex min-h-[238px] flex-col justify-between rounded-[24px] border border-[#0d3d7b]/15 bg-white/62 p-4 shadow-[0_18px_46px_rgba(6,26,54,0.1)] transition hover:-translate-y-0.5 hover:bg-white/82";
+                const ctaClass = "mt-5 inline-flex min-h-[42px] items-center justify-center rounded-full bg-[#061a36] px-4 text-sm font-bold text-white transition group-hover:translate-y-[-1px]";
+
+                if (isRevealPackage && !isRevealed) {
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setRevealedPriceIds((current) => ({ ...current, [item.id]: true }))}
+                      className={`${cardClass} text-left`}
+                    >
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#285084]">{item.name[locale]}</p>
+                        <h3 className="mt-3 text-2xl font-semibold text-[#061a36]">{item.quantity[locale]}</h3>
+                        <p className="mt-2 text-sm font-medium text-[#285084]">
+                          {locale === "zh" ? "点击查看价格" : "Tap to view pricing"}
+                        </p>
+                        <p className="mt-3 text-sm leading-6 text-[#17345d]">{item.description[locale]}</p>
+                      </div>
+                      <span className={ctaClass}>
+                        {locale === "zh" ? "准备付费" : "Ready to pay"}
+                      </span>
+                    </button>
+                  );
+                }
+
+                return (
+                  <a
+                    key={item.id}
+                    href={targetHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={cardClass}
+                  >
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#285084]">{item.name[locale]}</p>
+                      <h3 className="mt-3 text-2xl font-semibold text-[#061a36]">{item.quantity[locale]}</h3>
+                      <p className="mt-2 text-3xl font-bold text-[#0d3d7b]">{item.price}</p>
+                      <p className="mt-3 text-sm leading-6 text-[#17345d]">{item.description[locale]}</p>
+                    </div>
+                    <span className={ctaClass}>
+                      {item.cta?.[locale] ?? (locale === "zh" ? "立即购买" : "Buy now")}
+                    </span>
+                  </a>
+                );
+              })}
             </div>
 
             <div className="mt-5 rounded-[24px] border border-[#0d3d7b]/15 bg-white/46 p-4">
