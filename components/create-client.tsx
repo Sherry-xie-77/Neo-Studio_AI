@@ -424,20 +424,20 @@ export function CreateClient({
                   });
                 }}
                 className={cn(
-                  "flex items-center gap-3 rounded-[22px] border p-3 text-left transition",
+                  "flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-[22px] border p-3 text-left transition",
                   template.slug === selectedSlug
                     ? "border-[var(--avp-border-strong)] bg-[rgba(79,153,255,0.16)] shadow-[0_16px_30px_rgba(0,73,187,0.16)]"
                     : "border-[var(--avp-border)] bg-[rgba(255,255,255,0.03)] hover:border-[var(--avp-border-strong)] hover:bg-[rgba(79,153,255,0.08)]",
                 )}
               >
-                <div className="relative h-24 w-16 overflow-hidden rounded-[16px] bg-[rgba(2,8,20,0.7)]">
+                <div className="relative h-24 w-[54px] shrink-0 overflow-hidden rounded-[16px] border border-[rgba(178,226,255,0.12)] bg-black p-1">
                   {template.posterUrl ? (
                     <Image
                       src={template.posterUrl}
                       alt={template.title[locale]}
                       fill
-                      sizes="64px"
-                      className="object-cover"
+                      sizes="54px"
+                      className="object-contain"
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-[10px] text-[var(--avp-text-muted)]">

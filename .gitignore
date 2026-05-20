@@ -42,6 +42,7 @@ next-env.d.ts
 
 # local-only media assets
 public/media/showcase/
+public/uploads/
 
 # runtime-generated local data
 data/generated/

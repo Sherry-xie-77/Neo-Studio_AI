@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Kalam } from "next/font/google";
+import Script from "next/script";
 import { type ReactNode } from "react";
 
 import { PostHogProvider } from "@/components/posthog-provider";
@@ -22,6 +23,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body className={kalam.variable}>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-18173500698"
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads-tag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-18173500698');
+          `}
+        </Script>
         <PostHogProvider />
         <PremiumProvider>{children}</PremiumProvider>
       </body>

@@ -2,7 +2,9 @@ import { FeedClient } from "@/components/feed-client";
 import { SiteShell } from "@/components/site-shell";
 import { TrackView } from "@/components/track-view";
 import { TRACKING_EVENTS } from "@/lib/constants";
-import { getComments, getFeaturedCases, getHomeFeedVideos } from "@/lib/server/store";
+import { getFeaturedCases, getHomeFeedVideos } from "@/lib/server/store";
+
+export const revalidate = 30;
 
 function getLocale(searchParams: { lang?: string }) {
   return searchParams.lang === "zh" ? "zh" : "en";
@@ -18,13 +20,6 @@ export default async function Home({
   const videos = await getHomeFeedVideos();
   const featuredCases = await getFeaturedCases();
 
-  const commentsEntries = await Promise.all(
-    videos.map(async (video) => {
-      const result = await getComments(video.id);
-      return [video.id, result?.comments ?? []] as const;
-    }),
-  );
-
   return (
     <SiteShell locale={locale} className="pb-28">
       <TrackView event={TRACKING_EVENTS.feedView} properties={{ locale }} />
@@ -36,7 +31,7 @@ export default async function Home({
           sort: params.sort,
         }}
         initialVideos={videos}
-        initialComments={Object.fromEntries(commentsEntries)}
+        initialComments={{}}
         featuredCases={featuredCases}
       />
     </SiteShell>

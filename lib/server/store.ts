@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 
 import { makeInitialStore } from "@/lib/seed-data";
 import { normalizeDiscoverCategories } from "@/lib/discover-categories";
+import { getEpisodeNumber, getFirstEpisodeForVideo, hasPlayableAsset, isEmpireOfDustVideo, isStandaloneVideo } from "@/lib/watch-series";
 import {
   type BilingualText,
   type ContentSettings,
@@ -29,6 +30,12 @@ const postgresUrl = process.env.PRISMA_DIRECT_TCP_URL ?? process.env.DATABASE_UR
 const usePostgresStore = Boolean(postgresUrl);
 const db = postgresUrl ? prismaPostgres(defaultClientConfig(postgresUrl)) : null;
 let databaseReady = false;
+const STORE_CACHE_TTL_MS = 20_000;
+let storeCache: { value: StoreShape; expiresAt: number } | null = null;
+
+function clearStoreCache() {
+  storeCache = null;
+}
 
 function getDatabase() {
   if (!db) throw new Error("Database is not configured");
@@ -199,27 +206,15 @@ type JsonRow<T> = { value: T };
 async function readDatabaseStore(): Promise<StoreShape> {
   await ensureDatabase();
   const database = getDatabase();
-  const [
-    settingsResult,
-    videosResult,
-    templatesResult,
-    commentsResult,
-    likesResult,
-    generationsResult,
-    sessionsResult,
-    ordersResult,
-    casesResult,
-  ] = await Promise.all([
-    database.sql<JsonRow<ContentSettings>>`SELECT value FROM kv_store WHERE key = 'content_settings'`.collect(),
-    database.sql<JsonRow<FeedVideoItem>>`SELECT value FROM feed_videos`.collect(),
-    database.sql<JsonRow<VideoTemplate>>`SELECT value FROM templates`.collect(),
-    database.sql<JsonRow<VideoComment>>`SELECT value FROM comments`.collect(),
-    database.sql<JsonRow<VideoLike>>`SELECT value FROM likes`.collect(),
-    database.sql<JsonRow<GenerationRecord>>`SELECT value FROM generations`.collect(),
-    database.sql<JsonRow<{ id: string; createdAt: string; updatedAt: string }>>`SELECT value FROM sessions`.collect(),
-    database.sql<JsonRow<PremiumOrder>>`SELECT value FROM premium_orders`.collect(),
-    database.sql<JsonRow<FeaturedCase>>`SELECT value FROM featured_cases`.collect(),
-  ]);
+  const settingsResult = await database.sql<JsonRow<ContentSettings>>`SELECT value FROM kv_store WHERE key = 'content_settings'`.collect();
+  const videosResult = await database.sql<JsonRow<FeedVideoItem>>`SELECT value FROM feed_videos`.collect();
+  const templatesResult = await database.sql<JsonRow<VideoTemplate>>`SELECT value FROM templates`.collect();
+  const commentsResult = await database.sql<JsonRow<VideoComment>>`SELECT value FROM comments`.collect();
+  const likesResult = await database.sql<JsonRow<VideoLike>>`SELECT value FROM likes`.collect();
+  const generationsResult = await database.sql<JsonRow<GenerationRecord>>`SELECT value FROM generations`.collect();
+  const sessionsResult = await database.sql<JsonRow<{ id: string; createdAt: string; updatedAt: string }>>`SELECT value FROM sessions`.collect();
+  const ordersResult = await database.sql<JsonRow<PremiumOrder>>`SELECT value FROM premium_orders`.collect();
+  const casesResult = await database.sql<JsonRow<FeaturedCase>>`SELECT value FROM featured_cases`.collect();
 
   return normalizeStoreShape({
     feedVideos: Object.fromEntries(videosResult.map((row) => [row.value.id, row.value])),
@@ -277,10 +272,15 @@ async function writeDatabaseStore(store: StoreShape) {
 }
 
 async function readStore(): Promise<StoreShape> {
-  return usePostgresStore ? readDatabaseStore() : readFileStore();
+  const now = Date.now();
+  if (storeCache && storeCache.expiresAt > now) return storeCache.value;
+  const value = usePostgresStore ? await readDatabaseStore() : await readFileStore();
+  storeCache = { value, expiresAt: now + STORE_CACHE_TTL_MS };
+  return value;
 }
 
 async function writeStore(store: StoreShape) {
+  clearStoreCache();
   if (usePostgresStore) {
     await writeDatabaseStore(store);
     return;
@@ -288,16 +288,86 @@ async function writeStore(store: StoreShape) {
   await writeFileStore(store);
 }
 
+function isRealTemplateUrl(value: string | undefined) {
+  const url = value?.trim();
+  return Boolean(url && !url.includes("/media/share/placeholder.svg"));
+}
+
+function hasPlayableTemplateAsset(template: VideoTemplate) {
+  return Boolean(template.isReady && isRealTemplateUrl(template.previewVideoUrl) && isRealTemplateUrl(template.posterUrl));
+}
+
+function uniqueStrings(values: string[] | undefined) {
+  return Array.from(new Set((values ?? []).filter((value) => typeof value === "string" && value.trim()).map((value) => value.trim())));
+}
+
+function normalizeCaseKey(item: Pick<FeaturedCase, "accountName" | "accountUrl" | "title">) {
+  const accountUrl = item.accountUrl.trim().toLowerCase().replace(/\/+$/, "");
+  if (accountUrl) return `url:${accountUrl}`;
+  return `name:${item.accountName.trim().toLowerCase()}|title:${item.title.zh.trim().toLowerCase()}`;
+}
+
+function cleanupChineseText(value: string) {
+  return value
+    .replace(/AI original short drama showcase for Empire of Dust\.\s*/gi, "")
+    .replace(/感谢大家喜欢我的原创AI短剧！如果您对其他故事情节感兴趣，欢迎订阅我的频道并查看我的播放列表！/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function empireEpisodeTitleZh(episodeNumber: number | undefined) {
+  return `尘埃帝国${episodeNumber ? ` 第${String(episodeNumber).padStart(2, "0")}集` : ""}`;
+}
+
+function normalizeFeedVideo(video: FeedVideoItem): FeedVideoItem {
+  if (!isEmpireOfDustVideo(video)) return video;
+  const episodeNumber = getEpisodeNumber(video);
+  return {
+    ...video,
+    collection: "Empire of Dust",
+    discoverCategoryId: "short-drama",
+    title: {
+      en: video.title.en.replace(/\s*\|\s*/g, " | ").replace(/\bep\s*(\d+)\b/i, (_, value: string) => `Ep ${Number(value)}`),
+      zh: empireEpisodeTitleZh(episodeNumber),
+    },
+    summary: {
+      en: video.summary.en,
+      zh: cleanupChineseText(video.summary.zh),
+    },
+    recommendationReason: {
+      en: video.recommendationReason.en,
+      zh: cleanupChineseText(video.recommendationReason.zh),
+    },
+  };
+}
+
+function getDisplayCountBase(id: string, salt: number) {
+  let hash = salt;
+  for (let index = 0; index < id.length; index += 1) {
+    hash = (hash * 31 + id.charCodeAt(index)) % 8_000;
+  }
+  return 1_200 + hash;
+}
+
+function getPublicLikesCount(video: FeedVideoItem, actualLikesCount: number) {
+  return Math.max(video.likesCount, getDisplayCountBase(video.id, 17)) + actualLikesCount;
+}
+
+function getPublicCommentsCount(video: FeedVideoItem, actualCommentsCount: number) {
+  return Math.max(video.commentsCount, getDisplayCountBase(video.id, 43)) + actualCommentsCount;
+}
+
 function hydrateCounts(store: StoreShape, video: FeedVideoItem): FeedVideoItem {
-  const likesCount = Object.values(store.likes).filter((like) => like.videoId === video.id).length;
-  const commentsCount = Object.values(store.comments).filter(
+  const normalizedVideo = normalizeFeedVideo(video);
+  const actualLikesCount = Object.values(store.likes).filter((like) => like.videoId === video.id).length;
+  const actualCommentsCount = Object.values(store.comments).filter(
     (comment) => comment.videoId === video.id,
   ).length;
 
   return {
-    ...video,
-    likesCount,
-    commentsCount,
+    ...normalizedVideo,
+    likesCount: getPublicLikesCount(normalizedVideo, actualLikesCount),
+    commentsCount: getPublicCommentsCount(normalizedVideo, actualCommentsCount),
   };
 }
 
@@ -335,30 +405,48 @@ export async function createUploadedVideo(input: {
   const slug = slugify(`${input.collection}-${input.titleEn || input.titleZh}-${nextNumber}`);
   const title = normalizeBilingualText(input.titleZh, input.titleEn);
   const summary = normalizeBilingualText(input.summaryZh, input.summaryEn);
-  const tags = input.tags.length ? input.tags : ["drama"];
-  const collection = input.collection.trim() || "Uploaded Dramas";
+  const isAdUpload = input.discoverCategoryId?.trim() === "ad";
+  const tags = input.tags.length ? input.tags : [isAdUpload ? "ad" : "drama"];
+  const collection = input.collection.trim() || (isAdUpload ? "Uploaded Ads" : "Uploaded Dramas");
 
   const common = {
     title,
     summary,
-    recommendationReason: {
-      zh: `${title.zh} 已由内部后台上传，可作为短剧剧集直接播放。`,
-      en: `${title.en} was uploaded from the internal studio and is ready to watch.`,
-    },
-    useCases: [
-      { zh: "短剧播放", en: "Short drama playback" },
-      { zh: "会员解锁", en: "Premium unlock" },
-      { zh: "剧集连播", en: "Episode playlist" },
-    ],
+    recommendationReason: isAdUpload
+      ? {
+          zh: `${title.zh} 已由内部后台上传，可作为独立广告短视频展示。`,
+          en: `${title.en} was uploaded from the internal studio and is ready as a standalone ad video.`,
+        }
+      : {
+          zh: `${title.zh} 已由内部后台上传，可作为短剧剧集直接播放。`,
+          en: `${title.en} was uploaded from the internal studio and is ready to watch.`,
+        },
+    useCases: isAdUpload
+      ? [
+          { zh: "广告展示", en: "Ad showcase" },
+          { zh: "带货素材", en: "Commerce creative" },
+          { zh: "投放参考", en: "Campaign reference" },
+        ]
+      : [
+          { zh: "短剧播放", en: "Short drama playback" },
+          { zh: "会员解锁", en: "Premium unlock" },
+          { zh: "剧集连播", en: "Episode playlist" },
+        ],
     trendLabel: { zh: "内部上传", en: "Studio upload" },
     remixDifficulty: "easy" as const,
     collection,
     featured: false,
-    breakdownSteps: [
-      { zh: "进入剧集播放页。", en: "Open the episode watch page." },
-      { zh: "前三集试看，后续剧集由付费墙控制。", en: "The first three episodes are free, then Premium unlock applies." },
-      { zh: "会员解锁后继续观看。", en: "Continue watching after Premium unlock." },
-    ],
+    breakdownSteps: isAdUpload
+      ? [
+          { zh: "查看广告成片。", en: "Watch the finished ad video." },
+          { zh: "拆解产品卖点和画面节奏。", en: "Review the selling points and visual pacing." },
+          { zh: "作为广告定制或投放参考。", en: "Use it as a reference for custom ad production or campaigns." },
+        ]
+      : [
+          { zh: "进入剧集播放页。", en: "Open the episode watch page." },
+          { zh: "前三集试看，后续剧集由付费墙控制。", en: "The first three episodes are free, then Premium unlock applies." },
+          { zh: "会员解锁后继续观看。", en: "Continue watching after Premium unlock." },
+        ],
     quickTweaks: [
       { zh: "替换封面", en: "Replace poster" },
       { zh: "调整标题", en: "Update title" },
@@ -385,13 +473,20 @@ export async function createUploadedVideo(input: {
     slug,
     ...common,
     previewVideoUrl: input.videoUrl,
-    defaultPrompt: {
-      zh: `${title.zh} 的短剧剧集。`,
-      en: `${title.en} short-drama episode.`,
-    },
+    defaultPrompt: isAdUpload
+      ? {
+          zh: `${title.zh} 的广告短视频。`,
+          en: `${title.en} ad video.`,
+        }
+      : {
+          zh: `${title.zh} 的短剧剧集。`,
+          en: `${title.en} short-drama episode.`,
+        },
     promptFields: {
       subject: title,
-      setting: { zh: "短剧上传素材", en: "Uploaded short-drama asset" },
+      setting: isAdUpload
+        ? { zh: "广告上传素材", en: "Uploaded ad asset" }
+        : { zh: "短剧上传素材", en: "Uploaded short-drama asset" },
       motion: { zh: "按原视频播放", en: "Play the original video" },
       camera: { zh: "按原视频镜头", en: "Use original camera work" },
       finish: { zh: "保留原成片效果", en: "Keep original final look" },
@@ -420,22 +515,47 @@ function applyVideoOrder(videos: FeedVideoItem[], order: string[], hiddenIds: st
   return [...ordered, ...rest];
 }
 
+function uniqueHomeEntries(videos: FeedVideoItem[]) {
+  const byId = new Map(videos.map((video) => [video.id, video]));
+  const included = new Set<string>();
+  const result: FeedVideoItem[] = [];
+
+  for (const video of videos) {
+    const displayVideo = isStandaloneVideo(video) ? video : getFirstEpisodeForVideo(video, videos);
+    if (!byId.has(displayVideo.id) || included.has(displayVideo.id)) continue;
+    included.add(displayVideo.id);
+    result.push(displayVideo);
+  }
+
+  return result;
+}
+
 export async function getHomeFeedVideos() {
   const store = await readStore();
   const videos = Object.values(store.feedVideos)
-    .filter((video) => video.isReady)
-    .sort((a, b) => a.id.localeCompare(b.id))
+    .filter((video) => video.isReady && hasPlayableAsset(video))
+    .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
     .map((video) => hydrateCounts(store, video));
-  return applyVideoOrder(videos, store.contentSettings.homeVideoOrder, store.contentSettings.homeVideoHiddenIds);
+  const ordered = applyVideoOrder(videos, store.contentSettings.homeVideoOrder, store.contentSettings.homeVideoHiddenIds);
+  return uniqueHomeEntries(ordered);
 }
 
 export async function getDiscoverFeedVideos() {
   const store = await readStore();
   const videos = Object.values(store.feedVideos)
-    .filter((video) => video.isReady)
-    .sort((a, b) => a.id.localeCompare(b.id))
+    .filter((video) => video.isReady && hasPlayableAsset(video))
+    .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
     .map((video) => hydrateCounts(store, video));
-  return applyVideoOrder(videos, store.contentSettings.discoverVideoOrder, store.contentSettings.discoverVideoHiddenIds);
+  const ordered = applyVideoOrder(videos, store.contentSettings.discoverVideoOrder, store.contentSettings.discoverVideoHiddenIds);
+  return uniqueHomeEntries(ordered);
+}
+
+export async function getAllFeedVideos() {
+  const store = await readStore();
+  return Object.values(store.feedVideos)
+    .filter((video) => video.isReady && hasPlayableAsset(video))
+    .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
+    .map((video) => hydrateCounts(store, video));
 }
 
 export async function getDiscoverCategories() {
@@ -446,13 +566,20 @@ export async function getDiscoverCategories() {
 export async function getFeaturedCases() {
   const store = await readStore();
   const cases = Object.values(store.featuredCases).sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
-  if (!store.contentSettings.featuredCaseOrder.length) return cases;
-  const byId = new Map(cases.map((item) => [item.id, item]));
-  const ordered = store.contentSettings.featuredCaseOrder
+  const uniqueCases = Array.from(
+    cases.reduce((map, item) => {
+      const key = normalizeCaseKey(item);
+      if (!map.has(key)) map.set(key, item);
+      return map;
+    }, new Map<string, FeaturedCase>()).values(),
+  );
+  if (!store.contentSettings.featuredCaseOrder.length) return uniqueCases;
+  const byId = new Map(uniqueCases.map((item) => [item.id, item]));
+  const ordered = uniqueStrings(store.contentSettings.featuredCaseOrder)
     .map((id) => byId.get(id))
     .filter((item): item is FeaturedCase => Boolean(item));
   const orderedIds = new Set(ordered.map((item) => item.id));
-  return [...ordered, ...cases.filter((item) => !orderedIds.has(item.id))];
+  return [...ordered, ...uniqueCases.filter((item) => !orderedIds.has(item.id))];
 }
 
 export async function getAdminContentSnapshot() {
@@ -461,10 +588,14 @@ export async function getAdminContentSnapshot() {
     .filter((video) => video.isReady)
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((video) => hydrateCounts(store, video));
+  const featuredCases = await getFeaturedCases();
   return {
     videos,
-    contentSettings: store.contentSettings,
-    featuredCases: await getFeaturedCases(),
+    contentSettings: {
+      ...store.contentSettings,
+      featuredCaseOrder: uniqueStrings(store.contentSettings.featuredCaseOrder),
+    },
+    featuredCases,
   };
 }
 
@@ -476,6 +607,7 @@ export async function updateContentSettings(input: Partial<ContentSettings>) {
     discoverCategories: input.discoverCategories
       ? normalizeDiscoverCategories(input.discoverCategories)
       : store.contentSettings.discoverCategories,
+    featuredCaseOrder: uniqueStrings(input.featuredCaseOrder ?? store.contentSettings.featuredCaseOrder),
   };
   await writeStore(store);
   return store.contentSettings;
@@ -506,10 +638,59 @@ export async function createFeaturedCase(input: {
     createdAt: now,
     updatedAt: now,
   };
+  const existing = Object.values(store.featuredCases).find(
+    (featuredCase) => normalizeCaseKey(featuredCase) === normalizeCaseKey(item),
+  );
+  if (existing) {
+    store.featuredCases[existing.id] = {
+      ...existing,
+      ...item,
+      id: existing.id,
+      createdAt: existing.createdAt,
+      updatedAt: now,
+    };
+    store.contentSettings.featuredCaseOrder = uniqueStrings([
+      existing.id,
+      ...store.contentSettings.featuredCaseOrder,
+    ]);
+    await writeStore(store);
+    return store.featuredCases[existing.id];
+  }
   store.featuredCases[item.id] = item;
-  store.contentSettings.featuredCaseOrder = [...store.contentSettings.featuredCaseOrder, item.id];
+  store.contentSettings.featuredCaseOrder = uniqueStrings([...store.contentSettings.featuredCaseOrder, item.id]);
   await writeStore(store);
   return item;
+}
+
+async function deleteDatabaseFeaturedCases(caseIds: string[]) {
+  await ensureDatabase();
+  const database = getDatabase();
+  for (const id of caseIds) {
+    await database.sql.exec`DELETE FROM featured_cases WHERE id = ${id}`;
+  }
+}
+
+export async function deleteFeaturedCase(caseId: string) {
+  const store = await readStore();
+  const target = store.featuredCases[caseId];
+  if (!target) return null;
+  const targetKey = normalizeCaseKey(target);
+  const caseIds = Object.values(store.featuredCases)
+    .filter((item) => item.id === caseId || normalizeCaseKey(item) === targetKey)
+    .map((item) => item.id);
+  for (const id of caseIds) {
+    delete store.featuredCases[id];
+  }
+  const deletedSet = new Set(caseIds);
+  store.contentSettings.featuredCaseOrder = uniqueStrings(store.contentSettings.featuredCaseOrder).filter((id) => !deletedSet.has(id));
+  if (usePostgresStore) {
+    clearStoreCache();
+    await deleteDatabaseFeaturedCases(caseIds);
+    await writeDatabaseStore(store);
+  } else {
+    await writeStore(store);
+  }
+  return { id: caseId, deletedIds: caseIds };
 }
 
 export async function getFeedVideos() {
@@ -519,18 +700,21 @@ export async function getFeedVideos() {
 export async function getFeedVideoById(videoId: string) {
   const store = await readStore();
   const video = store.feedVideos[videoId];
-  if (!video) return null;
+  if (!video || !video.isReady || !hasPlayableAsset(video)) return null;
   return hydrateCounts(store, video);
 }
 
 export async function getTemplates() {
   const store = await readStore();
-  return Object.values(store.templates).sort((a, b) => a.slug.localeCompare(b.slug));
+  return Object.values(store.templates)
+    .filter(hasPlayableTemplateAsset)
+    .sort((a, b) => a.slug.localeCompare(b.slug));
 }
 
 export async function getTemplateBySlug(slug: string) {
   const store = await readStore();
-  return store.templates[slug] ?? null;
+  const template = store.templates[slug] ?? null;
+  return template && hasPlayableTemplateAsset(template) ? template : null;
 }
 
 export async function ensureSession(sessionId: string) {
@@ -591,7 +775,7 @@ export async function toggleLike(videoId: string, sessionId: string) {
 
   await writeStore(store);
 
-  const likesCount = Object.values(store.likes).filter((like) => like.videoId === videoId).length;
+  const likesCount = getPublicLikesCount(video, Object.values(store.likes).filter((like) => like.videoId === videoId).length);
 
   return {
     liked,
@@ -612,7 +796,7 @@ export async function getComments(videoId: string) {
 
   return {
     comments,
-    commentsCount: comments.length,
+    commentsCount: getPublicCommentsCount(video, comments.length),
   };
 }
 

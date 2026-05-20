@@ -5,17 +5,25 @@ import { NextResponse } from "next/server";
 import {
   createFeaturedCase,
   createUploadedVideo,
+  deleteFeaturedCase,
   getAdminContentSnapshot,
   updateContentSettings,
 } from "@/lib/server/store";
 import type { ContentSettings, DiscoverCategory } from "@/lib/types";
 
 const ADMIN_HEADER = "x-admin-token";
-const MAX_VIDEO_BYTES = 250 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 5 * 1024 * 1024 * 1024;
 const MAX_POSTER_BYTES = 10 * 1024 * 1024;
 const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024;
 const ALLOWED_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/ogg"]);
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const MAX_VIDEO_MB = MAX_VIDEO_BYTES / 1024 / 1024;
+const MAX_POSTER_MB = MAX_POSTER_BYTES / 1024 / 1024;
+const MAX_SCREENSHOT_MB = MAX_SCREENSHOT_BYTES / 1024 / 1024;
+
+function uploadError(error: string, details?: string, status = 400) {
+  return NextResponse.json(details ? { error, details } : { error }, { status });
+}
 
 function isAdmin(request: Request) {
   const token = request.headers.get(ADMIN_HEADER);
@@ -93,9 +101,82 @@ export async function PATCH(request: Request) {
   return NextResponse.json({ contentSettings: next });
 }
 
+export async function DELETE(request: Request) {
+  if (!isAdmin(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const caseId = searchParams.get("caseId")?.trim();
+  if (!caseId) {
+    return NextResponse.json({ error: "Missing caseId" }, { status: 400 });
+  }
+
+  const deleted = await deleteFeaturedCase(caseId);
+  if (!deleted) {
+    return NextResponse.json({ error: "Featured case not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ deleted });
+}
+
 export async function POST(request: Request) {
   if (!isAdmin(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const contentType = request.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    const body = (await request.json().catch(() => null)) as {
+      kind?: string;
+      titleZh?: string;
+      titleEn?: string;
+      summaryZh?: string;
+      summaryEn?: string;
+      collection?: string;
+      discoverCategoryId?: string;
+      tags?: string;
+      videoUrl?: string;
+      posterUrl?: string;
+    } | null;
+
+    if (!body || body.kind !== "video-from-blob") {
+      return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+    }
+
+    const titleZh = String(body.titleZh ?? "").trim();
+    const titleEn = String(body.titleEn ?? "").trim();
+    const summaryZh = String(body.summaryZh ?? "").trim();
+    const summaryEn = String(body.summaryEn ?? "").trim();
+    const collection = String(body.collection ?? "").trim();
+    const discoverCategoryId = String(body.discoverCategoryId ?? "").trim() || undefined;
+    const videoUrl = String(body.videoUrl ?? "").trim();
+    const posterUrl = String(body.posterUrl ?? "").trim();
+    const tags = String(body.tags ?? "")
+      .split(/[，,]/)
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+
+    if (!titleZh || !summaryZh || !collection || !videoUrl || !posterUrl) {
+      return uploadError("缺少必填字段", "请填写中文标题、中文简介、合集名称，并确保视频和封面已上传成功。Missing titleZh, summaryZh, collection, videoUrl, or posterUrl.");
+    }
+    if (!URL.canParse(videoUrl) || !URL.canParse(posterUrl)) {
+      return uploadError("素材链接无效", "视频或封面上传后返回的 URL 无效，请重新上传。Invalid videoUrl or posterUrl.");
+    }
+
+    const uploaded = await createUploadedVideo({
+      titleZh,
+      titleEn,
+      summaryZh,
+      summaryEn,
+      collection,
+      tags,
+      videoUrl,
+      posterUrl,
+      discoverCategoryId,
+    });
+
+    return NextResponse.json({ video: uploaded });
   }
 
   const formData = await request.formData().catch(() => null);
@@ -117,10 +198,16 @@ export async function POST(request: Request) {
     const screenshot = formData.get("screenshot");
 
     if (!titleZh || !summaryZh || !accountName || !followers || !totalViews || !accountUrl) {
-      return NextResponse.json({ error: "Missing featured case fields" }, { status: 400 });
+      return uploadError("缺少成功案例字段", "请填写中文案例标题、中文简介、账号名称、粉丝数、总曝光量和账号跳转链接。Missing featured case fields.");
     }
-    if (!(screenshot instanceof File) || !ALLOWED_IMAGE_TYPES.has(screenshot.type) || screenshot.size > MAX_SCREENSHOT_BYTES) {
-      return NextResponse.json({ error: "Invalid account screenshot" }, { status: 400 });
+    if (!(screenshot instanceof File)) {
+      return uploadError("账号截图无效", "请上传 JPG、PNG 或 WebP 图片。Missing account screenshot file.");
+    }
+    if (!ALLOWED_IMAGE_TYPES.has(screenshot.type)) {
+      return uploadError("账号截图格式不支持", `当前格式：${screenshot.type || "unknown"}。请上传 JPG、PNG 或 WebP 图片。`);
+    }
+    if (screenshot.size > MAX_SCREENSHOT_BYTES) {
+      return uploadError("账号截图太大", `当前大小约 ${(screenshot.size / 1024 / 1024).toFixed(1)}MB，最大支持 ${MAX_SCREENSHOT_MB}MB。`);
     }
 
     const screenshotUrl = await saveUpload(screenshot, "cases");
@@ -153,16 +240,25 @@ export async function POST(request: Request) {
   const poster = formData.get("poster");
 
   if (!titleZh || !summaryZh || !collection) {
-    return NextResponse.json({ error: "Missing required text fields" }, { status: 400 });
+    return uploadError("缺少必填文字字段", "请填写中文标题、中文简介和短剧/合集名称。Missing titleZh, summaryZh, or collection.");
   }
-  if (!(video instanceof File) || !(poster instanceof File)) {
-    return NextResponse.json({ error: "Missing video or poster file" }, { status: 400 });
+  if (!(video instanceof File)) {
+    return uploadError("缺少视频文件", "请重新选择一个 MP4、WebM 或 OGG 视频文件。Missing video file.");
   }
-  if (!ALLOWED_VIDEO_TYPES.has(video.type) || video.size > MAX_VIDEO_BYTES) {
-    return NextResponse.json({ error: "Invalid video file" }, { status: 400 });
+  if (!(poster instanceof File)) {
+    return uploadError("缺少封面图", "请上传 JPG、PNG 或 WebP 封面图，或在前端勾选自动截取封面。Missing poster file.");
   }
-  if (!ALLOWED_IMAGE_TYPES.has(poster.type) || poster.size > MAX_POSTER_BYTES) {
-    return NextResponse.json({ error: "Invalid poster file" }, { status: 400 });
+  if (!ALLOWED_VIDEO_TYPES.has(video.type)) {
+    return uploadError("视频格式不支持", `当前格式：${video.type || "unknown"}。请上传 MP4、WebM 或 OGG。`);
+  }
+  if (video.size > MAX_VIDEO_BYTES) {
+    return uploadError("视频文件太大", `当前大小约 ${(video.size / 1024 / 1024).toFixed(1)}MB，最大支持 ${MAX_VIDEO_MB}MB。`);
+  }
+  if (!ALLOWED_IMAGE_TYPES.has(poster.type)) {
+    return uploadError("封面图格式不支持", `当前格式：${poster.type || "unknown"}。请上传 JPG、PNG 或 WebP。`);
+  }
+  if (poster.size > MAX_POSTER_BYTES) {
+    return uploadError("封面图太大", `当前大小约 ${(poster.size / 1024 / 1024).toFixed(1)}MB，最大支持 ${MAX_POSTER_MB}MB。`);
   }
 
   const [videoUrl, posterUrl] = await Promise.all([

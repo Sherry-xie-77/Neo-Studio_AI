@@ -2,6 +2,8 @@ import { DiscoverClient } from "@/components/discover-client";
 import { SiteShell } from "@/components/site-shell";
 import { getDiscoverCategories, getDiscoverFeedVideos } from "@/lib/server/store";
 
+export const revalidate = 30;
+
 function getLocale(searchParams: { lang?: string }) {
   return searchParams.lang === "zh" ? "zh" : "en";
 }

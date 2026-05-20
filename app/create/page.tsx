@@ -2,6 +2,8 @@ import { CreateClient } from "@/components/create-client";
 import { SiteShell } from "@/components/site-shell";
 import { getTemplates } from "@/lib/server/store";
 
+export const revalidate = 30;
+
 function getLocale(searchParams: { lang?: string }) {
   return searchParams.lang === "zh" ? "zh" : "en";
 }

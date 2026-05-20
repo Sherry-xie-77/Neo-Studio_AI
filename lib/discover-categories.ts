@@ -1,3 +1,4 @@
+import { isEmpireOfDustVideo } from "@/lib/watch-series";
 import { type DiscoverCategory, type FeedVideoItem } from "@/lib/types";
 
 export const defaultDiscoverCategories: DiscoverCategory[] = [
@@ -16,12 +17,14 @@ export function normalizeDiscoverCategories(categories: DiscoverCategory[] | und
   const seen = new Set<string>();
   const normalized = source
     .map((category) => ({
-      id: category.id.trim(),
-      title: {
-        zh: category.title.zh.trim(),
-        en: category.title.en.trim() || category.title.zh.trim(),
-      },
-      match: category.match?.trim(),
+      id: category.id.trim() === "empire-of-dust" ? "short-drama" : category.id.trim(),
+      title: category.id.trim() === "empire-of-dust"
+        ? { zh: "短剧", en: "Short Drama" }
+        : {
+            zh: category.title.zh.trim(),
+            en: category.title.en.trim() || category.title.zh.trim(),
+          },
+      match: category.id.trim() === "empire-of-dust" ? undefined : category.match?.trim(),
       locked: category.id === allCategory.id || category.locked,
     }))
     .filter((category) => category.id && category.title.zh && !seen.has(category.id) && seen.add(category.id));
@@ -32,7 +35,9 @@ export function normalizeDiscoverCategories(categories: DiscoverCategory[] | und
 
 export function matchesDiscoverCategory(video: FeedVideoItem, category: DiscoverCategory, index: number) {
   if (category.id === "all") return true;
+  if (category.id === "short-drama" && isEmpireOfDustVideo(video)) return true;
   if (video.discoverCategoryId) {
+    if (video.discoverCategoryId === "empire-of-dust") return category.id === "short-drama";
     return video.discoverCategoryId === category.id;
   }
   if (category.id === "featured") return index < 10;

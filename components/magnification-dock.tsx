@@ -23,7 +23,7 @@ export function MagnificationDock({
   return (
     <div
       className={cn(
-        "flex items-center gap-4 rounded-full border border-[rgba(165,215,255,0.14)] bg-[rgba(7,17,40,0.46)] px-4 py-2.5 shadow-[0_16px_36px_rgba(0,0,0,0.18)] backdrop-blur-xl",
+        "flex items-center gap-4 rounded-full border border-[rgba(165,215,255,0.14)] bg-[rgba(7,17,40,0.5)] px-4 py-3 shadow-[0_18px_42px_rgba(0,0,0,0.2)] backdrop-blur-xl",
         className,
       )}
       onMouseLeave={() => setHoveredIndex(null)}
@@ -32,8 +32,8 @@ export function MagnificationDock({
     >
       {items.map((item, index) => {
         const distance = hoveredIndex === null ? 99 : Math.abs(index - hoveredIndex);
-        const scale = distance === 0 ? 1.14 : distance === 1 ? 1.07 : distance === 2 ? 1.02 : 1;
-        const lift = distance === 0 ? -3 : distance === 1 ? -1.5 : 0;
+        const scale = distance === 0 ? 1.08 : distance === 1 ? 1.03 : 1;
+        const lift = distance === 0 ? -2 : 0;
 
         return (
           <div
@@ -53,7 +53,7 @@ export function MagnificationDock({
             <Link
               href={item.href}
               className={cn(
-                "relative inline-flex min-w-[110px] items-center justify-center rounded-full border px-6 py-3 text-[14px] font-semibold uppercase tracking-[0.12em] transition-[transform,background-color,border-color,color] duration-200",
+                "relative inline-flex min-w-[124px] items-center justify-center rounded-full border px-6 py-3.5 text-[14px] font-semibold uppercase tracking-[0.1em] transition-[transform,background-color,border-color,color] duration-200",
                 item.active
                   ? "border-[rgba(178,226,255,0.28)] bg-[rgba(79,153,255,0.18)] text-[var(--avp-text)]"
                   : "border-[rgba(171,221,255,0.16)] bg-[rgba(255,255,255,0.04)] text-[var(--avp-text-muted)] hover:text-[var(--avp-text)]",

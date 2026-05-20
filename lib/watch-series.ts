@@ -19,16 +19,81 @@ const templateCollectionTitles: Record<string, BilingualText> = {
   },
 };
 
+function isEmpireOfDustText(value: string) {
+  return /empire\s+of\s+dust|尘埃帝国/i.test(value);
+}
+
+export function isEmpireOfDustVideo(video: FeedVideoItem) {
+  return (
+    video.discoverCategoryId === "empire-of-dust" ||
+    isEmpireOfDustText(video.collection) ||
+    isEmpireOfDustText(video.title.en) ||
+    isEmpireOfDustText(video.title.zh)
+  );
+}
+
+export function getEpisodeNumber(video: FeedVideoItem) {
+  const source = [video.title.en, video.title.zh, video.summary.en, video.summary.zh].join(" ");
+  const english = source.match(/\bEP(?:ISODE)?\s*0*(\d+)\b/i);
+  if (english) return Number(english[1]);
+  const chinese = source.match(/第\s*0*(\d+)\s*集/);
+  return chinese ? Number(chinese[1]) : undefined;
+}
+
 function sortEpisodes(a: FeedVideoItem, b: FeedVideoItem) {
-  return a.id.localeCompare(b.id);
+  const episodeA = getEpisodeNumber(a);
+  const episodeB = getEpisodeNumber(b);
+  if (episodeA !== undefined && episodeB !== undefined && episodeA !== episodeB) {
+    return episodeA - episodeB;
+  }
+  if (episodeA !== undefined && episodeB === undefined) return -1;
+  if (episodeA === undefined && episodeB !== undefined) return 1;
+  return a.id.localeCompare(b.id, undefined, { numeric: true });
 }
 
 function isTemplateCollection(collection: string) {
   return collection in templateCollectionTitles;
 }
 
+function seriesKey(video: FeedVideoItem) {
+  if (isEmpireOfDustVideo(video)) return "empire-of-dust";
+  return video.collection;
+}
+
+function isRealPlayableUrl(value: string | undefined) {
+  const url = value?.trim();
+  return Boolean(url && !url.includes("/media/share/placeholder.svg"));
+}
+
+export function hasPlayableAsset(video: FeedVideoItem) {
+  return isRealPlayableUrl(video.videoUrl) && isRealPlayableUrl(video.posterUrl);
+}
+
+export function isStandaloneVideo(video: FeedVideoItem) {
+  return video.discoverCategoryId === "ad";
+}
+
 export function resolveSeriesForVideo(target: FeedVideoItem, videos: FeedVideoItem[]) {
-  const sortedVideos = [...videos].sort(sortEpisodes);
+  const sortedVideos = [...videos].filter(hasPlayableAsset).sort(sortEpisodes);
+
+  if (isStandaloneVideo(target)) {
+    return {
+      episodes: [target],
+      title: target.title,
+      collectionLabel: target.collection,
+    };
+  }
+
+  if (isEmpireOfDustVideo(target)) {
+    return {
+      episodes: sortedVideos.filter((video) => !isStandaloneVideo(video) && seriesKey(video) === "empire-of-dust"),
+      title: {
+        en: "Empire of Dust",
+        zh: "尘埃帝国",
+      },
+      collectionLabel: "Empire of Dust",
+    };
+  }
 
   if (isTemplateCollection(target.collection)) {
     return {
@@ -41,7 +106,9 @@ export function resolveSeriesForVideo(target: FeedVideoItem, videos: FeedVideoIt
     };
   }
 
-  const sameCollection = sortedVideos.filter((video) => video.collection === target.collection);
+  const sameCollection = sortedVideos.filter(
+    (video) => !isStandaloneVideo(video) && seriesKey(video) === seriesKey(target),
+  );
 
   return {
     episodes: sameCollection.length ? sameCollection : [target],

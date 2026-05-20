@@ -6,8 +6,8 @@ import { notFound } from "next/navigation";
 import { LoginWatchGate } from "@/components/login-watch-gate";
 import { PremiumWatchGate } from "@/components/premium-watch-gate";
 import { SiteShell } from "@/components/site-shell";
-import { getFeedVideoById, getFeedVideos } from "@/lib/server/store";
-import { resolveSeriesForVideo } from "@/lib/watch-series";
+import { getAllFeedVideos, getFeedVideoById } from "@/lib/server/store";
+import { resolveSeriesForVideo, getEpisodeNumber, isStandaloneVideo } from "@/lib/watch-series";
 
 function getLocale(searchParams: { lang?: string }) {
   return searchParams.lang === "zh" ? "zh" : "en";
@@ -22,7 +22,7 @@ export default async function WatchVideoPage({
 }) {
   const [{ videoId }, rawSearchParams] = await Promise.all([params, searchParams]);
   const locale = getLocale(rawSearchParams);
-  const [video, videos] = await Promise.all([getFeedVideoById(videoId), getFeedVideos()]);
+  const [video, videos] = await Promise.all([getFeedVideoById(videoId), getAllFeedVideos()]);
 
   if (!video) {
     notFound();
@@ -30,7 +30,15 @@ export default async function WatchVideoPage({
 
   const series = resolveSeriesForVideo(video, videos);
   const currentEpisodeIndex = series.episodes.findIndex((item) => item.id === video.id);
-  const episodeNumber = currentEpisodeIndex >= 0 ? currentEpisodeIndex + 1 : 1;
+  const episodeNumber = getEpisodeNumber(video) ?? (currentEpisodeIndex >= 0 ? currentEpisodeIndex + 1 : 1);
+  const standalone = isStandaloneVideo(video);
+  const episodeLabel = standalone
+    ? locale === "zh"
+      ? "独立短片"
+      : "Standalone"
+    : locale === "zh"
+      ? `第 ${episodeNumber} 集`
+      : `Episode ${episodeNumber}`;
 
   return (
     <SiteShell locale={locale} className="pb-20">
@@ -46,7 +54,7 @@ export default async function WatchVideoPage({
             </Link>
 
             <div className="text-right text-sm text-[var(--avp-text-muted)]">
-              {series.title[locale]} / {locale === "zh" ? `第 ${episodeNumber} 集` : `Episode ${episodeNumber}`}
+              {series.title[locale]} / {episodeLabel}
             </div>
           </div>
 
@@ -70,7 +78,7 @@ export default async function WatchVideoPage({
 
                 <div className="border-t border-[rgba(178,226,255,0.14)] bg-[rgba(2,8,20,0.96)] p-5 sm:p-6">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--avp-text-muted)]">
-                    {locale === "zh" ? `第 ${episodeNumber} 集` : `Episode ${episodeNumber}`}
+                    {episodeLabel}
                   </p>
                   <h1 className="mt-3 text-3xl font-semibold text-[var(--avp-text)]">
                     {video.title[locale]}
@@ -85,13 +93,11 @@ export default async function WatchVideoPage({
                 <div>
                   <p className="text-sm text-[var(--avp-text-muted)]">
                     {locale === "zh"
-                      ? `Home / ${series.title[locale]} / 第 ${episodeNumber} 集`
-                      : `Home / ${series.title[locale]} / Episode ${episodeNumber}`}
+                      ? `Home / ${series.title[locale]} / ${episodeLabel}`
+                      : `Home / ${series.title[locale]} / ${episodeLabel}`}
                   </p>
                   <h2 className="mt-4 text-3xl font-semibold leading-tight text-[var(--avp-text)]">
-                    {locale === "zh"
-                      ? `第 ${episodeNumber} 集 · ${video.title[locale]}`
-                      : `Episode ${episodeNumber} · ${video.title[locale]}`}
+                    {standalone ? video.title[locale] : `${episodeLabel} · ${video.title[locale]}`}
                   </h2>
                 </div>
 
@@ -146,7 +152,7 @@ export default async function WatchVideoPage({
                       </button>
                     </div>
                     <p className="text-sm text-[var(--avp-text-muted)]">
-                      {locale === "zh" ? "全部剧集" : "All episodes"}
+                      {standalone ? (locale === "zh" ? "独立视频" : "Standalone video") : (locale === "zh" ? "全部剧集" : "All episodes")}
                     </p>
                   </div>
 
@@ -163,7 +169,7 @@ export default async function WatchVideoPage({
                             : "flex min-h-[42px] items-center justify-center rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-sm text-[var(--avp-text-muted)] transition hover:text-[var(--avp-text)]"
                           }
                         >
-                          {index + 1}
+                          {getEpisodeNumber(episode) ?? index + 1}
                         </Link>
                       );
                     })}
@@ -229,7 +235,7 @@ export default async function WatchVideoPage({
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--avp-text-muted)]">
-                      {locale === "zh" ? `第 ${index + 1} 集` : `Episode ${index + 1}`}
+                      {locale === "zh" ? `第 ${getEpisodeNumber(episode) ?? index + 1} 集` : `Episode ${getEpisodeNumber(episode) ?? index + 1}`}
                     </p>
                     <p className="mt-2 line-clamp-2 text-sm font-semibold text-[var(--avp-text)]">
                       {episode.title[locale]}
