@@ -47,3 +47,4 @@ public/uploads/
 # runtime-generated local data
 data/generated/
 .env*.local
+/storage-migration/

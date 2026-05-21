@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-import { defaultClientConfig, prismaPostgres } from "@prisma/ppg";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import { nanoid } from "nanoid";
 
 import { makeInitialStore } from "@/lib/seed-data";
@@ -26,9 +26,38 @@ import {
 
 const dataDir = path.join(process.cwd(), "data");
 const dataFile = path.join(dataDir, "generated", "mock-db.json");
-const postgresUrl = process.env.PRISMA_DIRECT_TCP_URL ?? process.env.DATABASE_URL ?? process.env.PRISMA_DATABASE_URL ?? "";
+const postgresUrl = process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? process.env.PRISMA_DATABASE_URL ?? "";
 const usePostgresStore = Boolean(postgresUrl);
-const db = postgresUrl ? prismaPostgres(defaultClientConfig(postgresUrl)) : null;
+
+type SqlCollectable<T> = PromiseLike<T[]> & { collect: () => Promise<T[]> };
+type SqlBuilder = (<T = unknown>(strings: TemplateStringsArray, ...values: unknown[]) => SqlCollectable<T>) & {
+  exec: (strings: TemplateStringsArray, ...values: unknown[]) => Promise<void>;
+};
+
+type DatabaseClient = { sql: SqlBuilder };
+
+function createDatabaseClient(connectionString: string): DatabaseClient {
+  const query: NeonQueryFunction<false, false> = neon(connectionString);
+  const sql = (<T = unknown>(strings: TemplateStringsArray, ...values: unknown[]): SqlCollectable<T> => {
+    let promise: Promise<T[]> | null = null;
+    const run = () => {
+      if (!promise) {
+        promise = query(strings, ...values) as unknown as Promise<T[]>;
+      }
+      return promise;
+    };
+    return {
+      then: (onFulfilled, onRejected) => run().then(onFulfilled, onRejected),
+      collect: () => run(),
+    };
+  }) as SqlBuilder;
+  sql.exec = async (strings: TemplateStringsArray, ...values: unknown[]) => {
+    await query(strings, ...values);
+  };
+  return { sql };
+}
+
+const db: DatabaseClient | null = postgresUrl ? createDatabaseClient(postgresUrl) : null;
 let databaseReady = false;
 const STORE_CACHE_TTL_MS = 20_000;
 let storeCache: { value: StoreShape; expiresAt: number } | null = null;
@@ -194,10 +223,11 @@ async function ensureDatabase() {
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`;
 
-  const existing = await database.sql<{ count: string }>`SELECT COUNT(*)::text AS count FROM feed_videos`.collect();
+  const seededRow = await database.sql<{ value: { seededAt: string } }>`SELECT value FROM kv_store WHERE key = 'seeded'`.collect();
   databaseReady = true;
-  if (Number(existing[0]?.count ?? 0) === 0) {
+  if (seededRow.length === 0) {
     await writeDatabaseStore(makeInitialStore());
+    await database.sql.exec`INSERT INTO kv_store (key, value) VALUES ('seeded', ${JSON.stringify({ seededAt: new Date().toISOString() })}::jsonb) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`;
   }
 }
 
