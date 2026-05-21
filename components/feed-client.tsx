@@ -410,7 +410,7 @@ export function FeedClient({
           <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--avp-text-muted)]">
             {locale === "zh" ? "今天下单，最快 7 天上线投放" : "ORDER TODAY · LIVE IN 7 DAYS"}
           </p>
-          <h1 className="text-4xl font-semibold uppercase leading-none text-[var(--avp-text)] sm:text-5xl lg:text-6xl">
+          <h1 className="font-semibold uppercase leading-[1.05] text-[var(--avp-text)] text-[clamp(2rem,5.6vw,4rem)]">
             {locale === "zh" ? "在这里做的视频，都是百万曝光起步的爆款" : "Videos built here go viral and sell"}
           </h1>
           <p className="mx-auto max-w-xl text-sm leading-7 text-[var(--avp-text-muted)]">
@@ -444,7 +444,7 @@ export function FeedClient({
               <p className="text-[11px] uppercase tracking-[0.32em] text-[#285084]">
                 {locale === "zh" ? "百万曝光 · 出单加速" : "MILLIONS OF VIEWS · MORE ORDERS"}
               </p>
-              <h2 className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
+              <h2 className="font-semibold leading-tight text-[clamp(1.75rem,4vw,3rem)]">
                 {locale === "zh" ? "$12.99 起，让你的产品上热门、出大单" : "From $12.99 — go viral, sell more, today."}
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-[#17345d] sm:text-base">
@@ -527,7 +527,7 @@ export function FeedClient({
           </JellyButton>
         </div>
 
-        <div className="grid gap-6 pt-2 xl:grid-cols-[320px_repeat(3,minmax(0,1fr))]">
+        <div className="grid gap-6 pt-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[320px_repeat(3,minmax(0,1fr))]">
           {featuredCases.length ? (
             <>
               {featuredCases.length > 1 ? (
