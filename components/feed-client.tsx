@@ -442,16 +442,98 @@ export function FeedClient({
           <div className="space-y-5">
             <div className="space-y-3">
               <p className="text-[11px] uppercase tracking-[0.32em] text-[#285084]">
-                {locale === "zh" ? "百万曝光 · 出单加速" : "MILLIONS OF VIEWS · MORE ORDERS"}
+                {locale === "zh" ? "划算到离谱 · 几十刀拿走整套爆款" : "ABSURDLY CHEAP · A FULL CREATIVE STACK FOR THE PRICE OF LUNCH"}
               </p>
               <h2 className="font-semibold leading-tight text-[clamp(1.75rem,4vw,3rem)]">
-                {locale === "zh" ? "$12.99 起，让你的产品上热门、出大单" : "From $12.99 — go viral, sell more, today."}
+                {locale === "zh"
+                  ? "以前 30 万一部短剧，现在 $12.99 起就能做出爆款"
+                  : "Used to cost $200K to shoot. Now starts at $12.99."}
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-[#17345d] sm:text-base">
                 {locale === "zh"
-                  ? "把产品扔给我们，48 小时拿到能直接投放的爆款视频脚本和成片。UGC 带货、TVC 质感大片、20 集品牌短剧任选；已经帮上百个品牌跑出百万播放、订单翻倍。每周名额有限，付款即排期。"
-                  : "Send us your product. In 48h you'll get viral-ready scripts and finished creatives — UGC, TVC, or a 20-episode branded drama. 100+ brands hit 1M+ views and doubled their orders. Weekly slots are limited — payment locks your spot."}
+                  ? "国内一部短剧最少 30 万人民币起步，海外更贵 — 一季 $150K–$300K，10 天拍摄、动辄 60 集；UGC 带货视频随便一条 $200，加投放授权再翻倍，找人、沟通、改稿一轮下来还是不爆。我们把这一整套压到几十刀，48 小时直接给你能投的成片。"
+                  : "A single short-drama season costs $150K–$300K and 10 days to shoot. A single UGC TikTok ad runs $200 — double it once you add ad-rights. We compress that entire stack into a one-time fee starting at $12.99 and ship ad-ready creatives in 48h."}
               </p>
+            </div>
+
+            <div className="rounded-[26px] border border-[#0d3d7b]/15 bg-white/55 p-4 shadow-[0_18px_46px_rgba(6,26,54,0.08)] sm:p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#285084]">
+                {locale === "zh" ? "你省下的钱 · 一笔账算给你看" : "WHAT YOU SKIP · LINE BY LINE"}
+              </p>
+              <ul className="mt-4 space-y-2.5 text-sm text-[#17345d] sm:text-base">
+                {[
+                  {
+                    zh: ["拍摄场地租金", "$3,000–$8,000 / 天"],
+                    en: ["Studio & location rental", "$3,000–$8,000 / day"],
+                  },
+                  {
+                    zh: ["演员片酬（男女主 + 群演）", "$1,200/天 主演 · $250/天 群演"],
+                    en: ["Cast (leads + day-players)", "$1,200/day lead · $250/day extra"],
+                  },
+                  {
+                    zh: ["导演 / 摄影 / 灯光 / 收音团队", "10 天 $40,000+"],
+                    en: ["Crew: director, DP, gaffer, sound", "$40,000+ for a 10-day shoot"],
+                  },
+                  {
+                    zh: ["剪辑 / 调色 / 配乐 / 字幕", "$5,000–$15,000 / 季"],
+                    en: ["Edit, color, score, subtitles", "$5,000–$15,000 / season"],
+                  },
+                  {
+                    zh: ["UGC 达人沟通 + 投放授权", "$200–$500 / 条 × 翻倍授权费"],
+                    en: ["UGC creator outreach + ad-rights", "$200–$500/video × 2 with usage rights"],
+                  },
+                ].map((row) => {
+                  const [label, price] = locale === "zh" ? row.zh : row.en;
+                  return (
+                    <li key={label} className="flex items-baseline justify-between gap-3 border-b border-[#0d3d7b]/10 pb-2 last:border-0 last:pb-0">
+                      <span className="leading-6">{label}</span>
+                      <span className="shrink-0 text-right font-semibold text-[#9b1e3f] line-through decoration-[#9b1e3f]/60">
+                        {price}
+                      </span>
+                    </li>
+                  );
+                })}
+                <li className="flex items-baseline justify-between gap-3 pt-2 text-base font-bold sm:text-lg">
+                  <span>{locale === "zh" ? "你只付 →" : "You pay →"}</span>
+                  <span className="text-[#0a6b3b]">{locale === "zh" ? "$12.99 起" : "from $12.99"}</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-[26px] border border-[#0d3d7b]/15 bg-white/55 p-4 shadow-[0_18px_46px_rgba(6,26,54,0.08)] sm:p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#285084]">
+                {locale === "zh" ? "免费打包送 · 全部含在套餐里" : "FREE & UNLIMITED · BAKED INTO EVERY ORDER"}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(locale === "zh"
+                  ? [
+                      "好看的真人模特",
+                      "上百种拍摄场地",
+                      "电影级灯光",
+                      "服装 / 妆造 / 道具",
+                      "脚本与分镜",
+                      "无限改稿到爆",
+                      "多语言字幕",
+                      "投放授权",
+                      "竖屏 / 横屏多版本",
+                    ]
+                  : [
+                      "Photogenic on-screen talent",
+                      "100+ cinematic locations",
+                      "Cinema-grade lighting",
+                      "Wardrobe · makeup · props",
+                      "Scripts & storyboards",
+                      "Unlimited revisions",
+                      "Multilingual subtitles",
+                      "Full ad-usage rights",
+                      "Vertical + landscape cuts",
+                    ]
+                ).map((tag) => (
+                  <span key={tag} className="rounded-full border border-[#0a6b3b]/22 bg-[#dff7ea] px-3 py-1.5 text-xs font-semibold text-[#0a6b3b]">
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
@@ -459,20 +541,26 @@ export function FeedClient({
                 {
                   zh: "UGC 带货爆款",
                   en: "UGC viral commerce",
-                  descZh: "真实用户口吻、强钩子开头，让用户停下来想买。已跑出多条单条破百万播放的爆款。",
-                  descEn: "Real-customer hooks that stop the scroll. Past creatives have crossed 1M+ views and lifted CTR.",
+                  oldZh: "找人 + 拍摄 + 授权 ≈ $400/条",
+                  oldEn: "Creator + shoot + rights ≈ $400/video",
+                  descZh: "真实用户口吻、强钩子开头，让用户 3 秒停下来想买。多条单条破百万播放的爆款已跑出。",
+                  descEn: "Native-feeling hooks that stop the scroll in 3 seconds — proven to cross 1M+ views and lift CTR.",
                 },
                 {
                   zh: "定制短剧",
                   en: "Custom drama",
-                  descZh: "20 集品牌剧情，把产品自然植入故事，连续追更带来稳定涨粉和复购，长期账号增长首选。",
-                  descEn: "20 branded episodes that turn your product into a story viewers come back for, driving steady follower growth and reorders.",
+                  oldZh: "传统拍摄 ≈ ¥30 万 / 海外 $150K+",
+                  oldEn: "Traditional shoot ≈ $150K–$300K/season",
+                  descZh: "20 集品牌剧情，把产品自然植入追更，稳定涨粉 + 复购。账号长期增长首选。",
+                  descEn: "20 branded episodes that turn your product into a story viewers binge — steady follower growth, repeat orders.",
                 },
                 {
                   zh: "TVC 质感大片",
                   en: "TVC-quality films",
-                  descZh: "电影级画面 + 强转化结构，用在官网、投放页和详情页，让客单价更高、退货更少。",
-                  descEn: "Cinematic visuals built around a conversion script — perfect for landing pages and listings, lifting AOV and trust.",
+                  oldZh: "传统 TVC 拍摄 ≈ $20K+",
+                  oldEn: "Traditional TVC shoot ≈ $20K+",
+                  descZh: "电影级画面 + 强转化脚本，用在官网、投放页、详情页 — 客单价更高、退货更少。",
+                  descEn: "Cinematic visuals + a conversion-tuned script — perfect for landing pages and listings. Higher AOV, less return.",
                 },
               ].map((item) => (
                 <div key={item.zh} className="rounded-[24px] border border-[#0d3d7b]/15 bg-white/52 p-4 shadow-[0_18px_46px_rgba(6,26,54,0.08)]">
@@ -480,6 +568,9 @@ export function FeedClient({
                   <h3 className="mt-3 text-2xl font-semibold text-[#061a36]">
                     {locale === "zh" ? item.zh : item.en}
                   </h3>
+                  <p className="mt-2 text-xs font-semibold text-[#9b1e3f] line-through decoration-[#9b1e3f]/55">
+                    {locale === "zh" ? item.oldZh : item.oldEn}
+                  </p>
                   <p className="mt-3 text-sm leading-6 text-[#17345d]">
                     {locale === "zh" ? item.descZh : item.descEn}
                   </p>
