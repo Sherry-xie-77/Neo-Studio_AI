@@ -394,7 +394,7 @@ export function FeedClient({
         </div>
       ) : null}
 
-      <section className="mb-10 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)_220px] lg:items-start">
+      <section className="mb-10 grid gap-6 lg:grid-cols-[minmax(180px,220px)_minmax(0,1fr)_minmax(180px,220px)] lg:items-start">
         <div className="space-y-3 pt-2">
           <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--avp-text-muted)]">
             {locale === "zh" ? "百万曝光 · 真实出单" : "MILLIONS OF VIEWS · REAL SALES"}
