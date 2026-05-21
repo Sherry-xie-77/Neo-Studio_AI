@@ -44,7 +44,7 @@ const customAdPackages: CustomAdPackage[] = [
     name: { zh: "入门试投", en: "Starter Test" },
     quantity: { zh: "3 条广告视频", en: "3 ad videos" },
     price: "$12.99",
-    href: "https://buy.stripe.com/6oU5kE1F24ZWgiBeT39AA03",
+    href: "https://buy.stripe.com/6oUeVe2J6cso9UdcKV9AA06",
     description: {
       zh: "先用 3 条素材验证一个产品卖点，适合低成本测试点击、询盘和下单意愿。",
       en: "Validate one product angle with 3 low-cost creatives built to test clicks, leads, and purchase intent.",
@@ -55,7 +55,7 @@ const customAdPackages: CustomAdPackage[] = [
     name: { zh: "爆款测试", en: "Hook Test" },
     quantity: { zh: "5 条广告视频", en: "5 ad videos" },
     price: "$19.99",
-    href: "https://buy.stripe.com/cNi6oIbfC640fex6mx9AA04",
+    href: "https://buy.stripe.com/9B69AUerO6409Ud7qB9AA07",
     description: {
       zh: "一次测试多个开头、痛点和购买理由，更快找到值得加预算的素材方向。",
       en: "Test more hooks, pain points, and reasons to buy so you can spot the creative worth scaling.",
@@ -66,7 +66,7 @@ const customAdPackages: CustomAdPackage[] = [
     name: { zh: "批量投放", en: "Scale Pack" },
     quantity: { zh: "10 条广告视频", en: "10 ad videos" },
     price: "$39.99",
-    href: "https://buy.stripe.com/3cI5kE0AYcso0jD9yJ9AA05",
+    href: "https://buy.stripe.com/dRmfZiaby4ZW8Q93al9AA08",
     description: {
       zh: "给 TikTok、Reels、Shorts 和广告账户准备一组可轮换素材，持续测出更高转化。",
       en: "Stock TikTok, Reels, Shorts, and ad accounts with rotating creatives for stronger conversion tests.",
@@ -77,8 +77,8 @@ const customAdPackages: CustomAdPackage[] = [
     name: { zh: "定制短剧", en: "Custom Drama" },
     quantity: { zh: "20 集品牌短剧", en: "20 branded drama episodes" },
     price: "$699",
-    href: "/custom-ads/brief",
-    cta: { zh: "定制短剧", en: "Customize drama" },
+    href: "https://buy.stripe.com/bJe28sbfC1NK0jD8uF9AA09",
+    cta: { zh: "立即付款定制", en: "Pay & customize" },
     description: {
       zh: "把产品写进连续剧情，用 20 集内容持续种草、涨粉和转化，适合品牌账号长期投放。",
       en: "Turn your product into a 20-episode story that builds demand, followers, and conversions over time.",
