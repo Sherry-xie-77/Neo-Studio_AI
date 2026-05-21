@@ -41,47 +41,50 @@ type CustomAdPackage = {
 const customAdPackages: CustomAdPackage[] = [
   {
     id: "starter",
-    name: { zh: "入门试投", en: "Starter Test" },
-    quantity: { zh: "3 条广告视频", en: "3 ad videos" },
+    name: { zh: "入门试投 · 一杯咖啡的钱", en: "Starter Test · cheaper than lunch" },
+    quantity: { zh: "3 条爆款广告片", en: "3 viral-ready ads" },
     price: "$12.99",
     href: "https://buy.stripe.com/6oUeVe2J6cso9UdcKV9AA06",
+    cta: { zh: "$12.99 立即下单", en: "Order for $12.99" },
     description: {
-      zh: "先用 3 条素材验证一个产品卖点，适合低成本测试点击、询盘和下单意愿。",
-      en: "Validate one product angle with 3 low-cost creatives built to test clicks, leads, and purchase intent.",
+      zh: "用一杯咖啡的钱，48 小时拿到 3 条能直接投的爆款素材。验证产品卖点，第一波下单数据立刻看到。",
+      en: "For the price of one coffee, get 3 ad-ready viral cuts in 48h. Validate your hook and watch the first-click data roll in.",
     },
   },
   {
     id: "hook",
-    name: { zh: "爆款测试", en: "Hook Test" },
-    quantity: { zh: "5 条广告视频", en: "5 ad videos" },
+    name: { zh: "爆款测试 · 最受欢迎", en: "Hook Test · most popular" },
+    quantity: { zh: "5 条爆款广告片", en: "5 viral-ready ads" },
     price: "$19.99",
     href: "https://buy.stripe.com/9B69AUerO6409Ud7qB9AA07",
+    cta: { zh: "$19.99 立即下单", en: "Order for $19.99" },
     description: {
-      zh: "一次测试多个开头、痛点和购买理由，更快找到值得加预算的素材方向。",
-      en: "Test more hooks, pain points, and reasons to buy so you can spot the creative worth scaling.",
+      zh: "一次拿 5 条不同开头、痛点和购买理由的素材，A/B 测试找出值得加预算的爆款方向。一晚上跑出第一支胜出。",
+      en: "Get 5 hooks × pain points × CTAs in one batch. A/B-test, find the winner, scale tonight.",
     },
   },
   {
     id: "scale",
-    name: { zh: "批量投放", en: "Scale Pack" },
-    quantity: { zh: "10 条广告视频", en: "10 ad videos" },
+    name: { zh: "批量投放 · 性价比之王", en: "Scale Pack · best value" },
+    quantity: { zh: "10 条爆款广告片", en: "10 viral-ready ads" },
     price: "$39.99",
     href: "https://buy.stripe.com/dRmfZiaby4ZW8Q93al9AA08",
+    cta: { zh: "$39.99 立即下单", en: "Order for $39.99" },
     description: {
-      zh: "给 TikTok、Reels、Shorts 和广告账户准备一组可轮换素材，持续测出更高转化。",
-      en: "Stock TikTok, Reels, Shorts, and ad accounts with rotating creatives for stronger conversion tests.",
+      zh: "TikTok、Reels、Shorts、Meta 广告库一次喂饱，10 条可轮换素材让 ROAS 持续走高。算下来一条只要 $4。",
+      en: "Feed TikTok, Reels, Shorts, and Meta in one shot — 10 rotating creatives that keep ROAS climbing. Just $4 per video.",
     },
   },
   {
     id: "drama",
-    name: { zh: "定制短剧", en: "Custom Drama" },
+    name: { zh: "定制短剧 · 长期账号增长", en: "Custom Drama · build a brand" },
     quantity: { zh: "20 集品牌短剧", en: "20 branded drama episodes" },
     price: "$699",
     href: "https://buy.stripe.com/bJe28sbfC1NK0jD8uF9AA09",
-    cta: { zh: "立即付款定制", en: "Pay & customize" },
+    cta: { zh: "立即定制（点击查看价格）", en: "Customize now (tap for price)" },
     description: {
-      zh: "把产品写进连续剧情，用 20 集内容持续种草、涨粉和转化，适合品牌账号长期投放。",
-      en: "Turn your product into a 20-episode story that builds demand, followers, and conversions over time.",
+      zh: "20 集连续剧情把产品写进故事，用户追更停不下来。粉丝稳涨、复购自来 — 比单次广告值多 10 倍。",
+      en: "20 episodes that turn your product into a story viewers binge. Followers stick, repeat orders compound — 10× the value of one-shot ads.",
     },
     revealPriceOnClick: true,
   },
@@ -438,24 +441,30 @@ export function FeedClient({
       <div id="custom-ads" className="scroll-mt-24" />
 
       <section id="paywall" className="mb-12 scroll-mt-24 overflow-hidden rounded-[32px] border border-[rgba(178,226,255,0.24)] bg-[linear-gradient(135deg,rgba(247,251,255,0.96),rgba(191,226,255,0.88)_46%,rgba(139,125,255,0.78))] p-5 text-[#061a36] shadow-[0_28px_80px_rgba(79,153,255,0.26)] sm:p-7">
-        <div className="grid gap-7 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
-          <div className="space-y-5">
-            <div className="space-y-3">
-              <p className="text-[11px] uppercase tracking-[0.32em] text-[#285084]">
-                {locale === "zh" ? "划算到离谱 · 几十刀拿走整套爆款" : "ABSURDLY CHEAP · A FULL CREATIVE STACK FOR THE PRICE OF LUNCH"}
-              </p>
-              <h2 className="font-semibold leading-tight text-[clamp(1.75rem,4vw,3rem)]">
-                {locale === "zh"
-                  ? "以前 30 万一部短剧，现在 $12.99 起就能做出爆款"
-                  : "Used to cost $200K to shoot. Now starts at $12.99."}
-              </h2>
-              <p className="max-w-2xl text-sm leading-7 text-[#17345d] sm:text-base">
-                {locale === "zh"
-                  ? "国内一部短剧最少 30 万人民币起步，海外更贵 — 一季 $150K–$300K，10 天拍摄、动辄 60 集；UGC 带货视频随便一条 $200，加投放授权再翻倍，找人、沟通、改稿一轮下来还是不爆。我们把这一整套压到几十刀，48 小时直接给你能投的成片。"
-                  : "A single short-drama season costs $150K–$300K and 10 days to shoot. A single UGC TikTok ad runs $200 — double it once you add ad-rights. We compress that entire stack into a one-time fee starting at $12.99 and ship ad-ready creatives in 48h."}
-              </p>
-            </div>
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <p className="text-[11px] uppercase tracking-[0.32em] text-[#285084]">
+              {locale === "zh" ? "划算到离谱 · 几十刀拿走整套爆款" : "ABSURDLY CHEAP · A FULL CREATIVE STACK FOR THE PRICE OF LUNCH"}
+            </p>
+            <h2 className="font-semibold leading-tight text-[clamp(1.75rem,4vw,3rem)]">
+              {locale === "zh"
+                ? "以前 30 万一部短剧，现在 $12.99 起就能做出爆款"
+                : "Used to cost $200K. Now starts at $12.99."}
+            </h2>
+            <p className="max-w-2xl text-sm leading-7 text-[#17345d] sm:text-base">
+              {locale === "zh"
+                ? "国内一部短剧最少 30 万人民币，海外一季 $150K–$300K；UGC 带货视频随便一条 $200，加投放授权再翻倍。我们把这一整套压到几十刀，48 小时直接交出能投的成片。"
+                : "Short-drama seasons run $150K–$300K. UGC TikTok ads start at $200 — double it with ad-rights. We compress the entire stack into a one-time fee from $12.99 and ship ad-ready creatives in 48h."}
+            </p>
+          </div>
+          <button type="button" onClick={() => setShowCustomAdPricing(true)} className="inline-flex h-[58px] shrink-0 items-center justify-center gap-2 self-start rounded-full bg-[#061a36] px-7 text-sm font-bold uppercase tracking-[0.18em] text-white shadow-[0_22px_52px_rgba(6,26,54,0.28)] transition hover:-translate-y-0.5 lg:self-end">
+            {locale === "zh" ? "立即下单 · $12.99 起" : "Order now · from $12.99"}
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
 
+        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
+          <div className="space-y-5">
             <div className="rounded-[26px] border border-[#0d3d7b]/15 bg-white/55 p-4 shadow-[0_18px_46px_rgba(6,26,54,0.08)] sm:p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#285084]">
                 {locale === "zh" ? "你省下的钱 · 一笔账算给你看" : "WHAT YOU SKIP · LINE BY LINE"}
@@ -500,42 +509,6 @@ export function FeedClient({
               </ul>
             </div>
 
-            <div className="rounded-[26px] border border-[#0d3d7b]/15 bg-white/55 p-4 shadow-[0_18px_46px_rgba(6,26,54,0.08)] sm:p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#285084]">
-                {locale === "zh" ? "免费打包送 · 全部含在套餐里" : "FREE & UNLIMITED · BAKED INTO EVERY ORDER"}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(locale === "zh"
-                  ? [
-                      "好看的真人模特",
-                      "上百种拍摄场地",
-                      "电影级灯光",
-                      "服装 / 妆造 / 道具",
-                      "脚本与分镜",
-                      "无限改稿到爆",
-                      "多语言字幕",
-                      "投放授权",
-                      "竖屏 / 横屏多版本",
-                    ]
-                  : [
-                      "Photogenic on-screen talent",
-                      "100+ cinematic locations",
-                      "Cinema-grade lighting",
-                      "Wardrobe · makeup · props",
-                      "Scripts & storyboards",
-                      "Unlimited revisions",
-                      "Multilingual subtitles",
-                      "Full ad-usage rights",
-                      "Vertical + landscape cuts",
-                    ]
-                ).map((tag) => (
-                  <span key={tag} className="rounded-full border border-[#0a6b3b]/22 bg-[#dff7ea] px-3 py-1.5 text-xs font-semibold text-[#0a6b3b]">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
             <div className="grid gap-3 md:grid-cols-3">
               {[
                 {
@@ -577,29 +550,90 @@ export function FeedClient({
                 </div>
               ))}
             </div>
-
-            <button type="button" onClick={() => setShowCustomAdPricing(true)} className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-[#061a36] px-5 text-sm font-bold text-white shadow-[0_18px_42px_rgba(6,26,54,0.22)] transition hover:-translate-y-0.5">
-              {locale === "zh" ? "立即下单做爆款" : "Order my viral video"}
-            </button>
           </div>
 
-          <div className="rounded-[26px] border border-[#0d3d7b]/15 bg-white/44 p-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-[#285084]">
-              {locale === "zh" ? "付款后提交需求" : "AFTER PAYMENT"}
-            </p>
-            <p className="mt-3 text-sm leading-6 text-[#17345d]">
-              {locale === "zh"
-                ? "付款成功后会进入需求提交页，再打开邮件模板发送产品图片、购买套餐和投放需求。"
-                : "After successful payment, continue to the brief page to open the email template and send product images, package details, and campaign requirements."}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {briefFormula.map((item) => (
-                <span key={item} className="rounded-full border border-[#0d3d7b]/14 bg-white/48 px-3 py-1.5 text-xs font-semibold text-[#061a36]">
-                  {item}
-                </span>
-              ))}
+          <aside className="space-y-4">
+            <div className="relative overflow-hidden rounded-[28px] border border-[#0a6b3b]/30 bg-[linear-gradient(160deg,#0d2845_0%,#0a6b3b_55%,#1aa363_100%)] p-5 text-white shadow-[0_28px_70px_rgba(10,107,59,0.36)] sm:p-6">
+              <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-[#7afca7]/22 blur-3xl" />
+              <div aria-hidden="true" className="pointer-events-none absolute -bottom-16 -left-10 h-44 w-44 rounded-full bg-[#3aff8a]/14 blur-3xl" />
+              <div className="relative">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="rounded-full bg-white/14 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#cffce0]">
+                    {locale === "zh" ? "免费打包送" : "FREE BUNDLE"}
+                  </span>
+                  <span className="rounded-full border border-white/24 bg-black/22 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white">
+                    {locale === "zh" ? "总价值 $12,000+" : "Worth $12,000+"}
+                  </span>
+                </div>
+                <h3 className="mt-4 text-[clamp(1.5rem,2.6vw,2rem)] font-semibold leading-tight">
+                  {locale === "zh"
+                    ? "9 项制作大杀器 · 全部 0 元送给你"
+                    : "9 production essentials. Yours, free."}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-white/82">
+                  {locale === "zh"
+                    ? "外面单买这些就要烧掉一部短剧的预算 — 我们打包送给每一位下单的客户。"
+                    : "Stocking these up the old way burned a full drama budget. We bake them into every package."}
+                </p>
+
+                <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+                  {(locale === "zh"
+                    ? [
+                        ["好看的真人模特", "$2,400 / 拍摄日"],
+                        ["上百种拍摄场地", "$8,000 / 天"],
+                        ["电影级灯光", "$1,500 / 天"],
+                        ["服装 · 妆造 · 道具", "$1,200 / 套"],
+                        ["脚本 + 分镜", "$800 / 集"],
+                        ["无限次改稿", "$400 / 次"],
+                        ["多语言字幕", "$120 / 条"],
+                        ["全权投放授权", "$200 / 条"],
+                        ["竖屏 + 横屏多版本", "$150 / 版"],
+                      ]
+                    : [
+                        ["Photogenic on-screen talent", "$2,400 / day"],
+                        ["100+ cinematic locations", "$8,000 / day"],
+                        ["Cinema-grade lighting", "$1,500 / day"],
+                        ["Wardrobe · makeup · props", "$1,200 / set"],
+                        ["Scripts + storyboards", "$800 / episode"],
+                        ["Unlimited revisions", "$400 / round"],
+                        ["Multilingual subtitles", "$120 / video"],
+                        ["Full ad-usage rights", "$200 / video"],
+                        ["Vertical + landscape cuts", "$150 / version"],
+                      ]
+                  ).map(([tag, worth]) => (
+                    <li key={tag} className="flex items-start gap-2 rounded-[16px] bg-white/8 px-3 py-2 backdrop-blur-sm">
+                      <span aria-hidden="true" className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#3aff8a] text-[11px] font-bold text-[#03361b]">✓</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold leading-snug text-white">{tag}</span>
+                        <span className="block text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9bf3c0] line-through decoration-[#9bf3c0]/50">{worth}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button type="button" onClick={() => setShowCustomAdPricing(true)} className="mt-6 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-white px-5 text-sm font-bold uppercase tracking-[0.18em] text-[#0a6b3b] shadow-[0_18px_42px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5">
+                  {locale === "zh" ? "立即领取 · 占住本周名额" : "Claim my free bundle"}
+                  <span aria-hidden="true">→</span>
+                </button>
+                <p className="mt-3 text-center text-[11px] uppercase tracking-[0.22em] text-white/68">
+                  {locale === "zh" ? "付款即排期 · 48 小时交付首条" : "Payment locks your slot · first cut in 48h"}
+                </p>
+              </div>
             </div>
-          </div>
+
+            <div className="rounded-[22px] border border-[#0d3d7b]/15 bg-white/55 p-4 text-sm leading-6 text-[#17345d]">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#285084]">
+                {locale === "zh" ? "下单后我们要的 7 个信息" : "WE'LL ASK FOR THESE 7 THINGS"}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {briefFormula.map((item) => (
+                  <span key={item} className="rounded-full border border-[#0d3d7b]/14 bg-white/64 px-3 py-1.5 text-xs font-semibold text-[#061a36]">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
 
@@ -795,17 +829,25 @@ export function FeedClient({
           <div className="max-h-[88vh] w-full max-w-5xl overflow-y-auto rounded-[32px] border border-[rgba(178,226,255,0.24)] bg-[linear-gradient(135deg,rgba(247,251,255,0.98),rgba(191,226,255,0.94)_52%,rgba(139,125,255,0.86))] p-5 text-[#061a36] shadow-[0_32px_90px_rgba(0,0,0,0.34)] sm:p-7">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.32em] text-[#285084]">
-                  {locale === "zh" ? "今天下单 · 7 天交付" : "ORDER TODAY · DELIVERED IN 7 DAYS"}
-                </p>
-                <h2 className="mt-2 text-3xl font-semibold leading-tight sm:text-4xl">
-                  {locale === "zh" ? "选一个套餐，把产品做成下一个百万爆款" : "Pick a package and turn your product into the next viral hit"}
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#9b1e3f] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-white">
+                  {locale === "zh" ? "本周仅剩有限名额" : "LIMITED SLOTS THIS WEEK"}
+                </span>
+                <h2 className="mt-3 text-3xl font-semibold leading-tight sm:text-4xl">
+                  {locale === "zh"
+                    ? "选个套餐 · 48 小时拿到第一条爆款"
+                    : "Pick a package — your first viral cut ships in 48h."}
                 </h2>
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-[#17345d]">
                   {locale === "zh"
-                    ? "$12.99 起就能跑出第一条爆款，长期账号增长选 20 集定制短剧。付款立即排期，提交产品图和投放目标，我们按 brief 制作并交付能直接投放的成片。"
-                    : "Ship your first viral creative from $12.99, or lock long-term growth with the 20-episode custom drama. Payment locks your slot — send product images and goals and we deliver ad-ready cuts."}
+                    ? "已经帮上百个品牌跑出过百万播放、订单翻倍。$12.99 起跑通第一条带货爆款；长期账号增长选 20 集定制短剧。付款即锁档期，模特/场地/灯光/授权/字幕/多版本剪辑全部 0 元打包送，不爆款免费补拍直到你满意。"
+                    : "100+ brands hit 1M+ views and doubled orders here. From $12.99 you ship your first viral creative; lock long-term growth with the 20-episode drama. Payment locks your slot. Talent, locations, lighting, ad-rights, subtitles and multi-format cuts are all free — and we reshoot for free until it goes viral."}
                 </p>
+                <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-[#0a6b3b]">
+                  <li className="inline-flex items-center gap-1.5"><span aria-hidden="true">✓</span>{locale === "zh" ? "48 小时交首条" : "First cut in 48h"}</li>
+                  <li className="inline-flex items-center gap-1.5"><span aria-hidden="true">✓</span>{locale === "zh" ? "$12,000+ 制作资源全免" : "$12K+ production stack free"}</li>
+                  <li className="inline-flex items-center gap-1.5"><span aria-hidden="true">✓</span>{locale === "zh" ? "不爆款免费补拍" : "Reshoots free until it hits"}</li>
+                  <li className="inline-flex items-center gap-1.5"><span aria-hidden="true">✓</span>{locale === "zh" ? "投放授权全部包含" : "Full ad-rights included"}</li>
+                </ul>
               </div>
               <button type="button" onClick={() => { setShowCustomAdPricing(false); setRevealedPriceIds({}); }} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#0d3d7b]/15 bg-white/60 text-lg font-semibold text-[#061a36] transition hover:bg-white/85" aria-label={locale === "zh" ? "关闭报价窗口" : "Close pricing modal"}>
                 ×
@@ -865,15 +907,27 @@ export function FeedClient({
               })}
             </div>
 
-            <div className="mt-5 rounded-[24px] border border-[#0d3d7b]/15 bg-white/46 p-4">
-              <p className="text-xs uppercase tracking-[0.22em] text-[#285084]">
-                {locale === "zh" ? "付款后提交需求" : "AFTER PAYMENT"}
-              </p>
-              <p className="mt-3 text-sm leading-6 text-[#17345d]">
-                {locale === "zh"
-                  ? "付款成功后进入需求提交页，再打开邮件模板发送产品图片、购买套餐和投放需求。"
-                  : "After successful payment, continue to the brief page to open the email template and send product images, package details, and campaign requirements."}
-              </p>
+            <div className="mt-5 grid gap-3 md:grid-cols-[1.2fr_1fr]">
+              <div className="rounded-[24px] border border-[#0a6b3b]/22 bg-[#dff7ea] p-4 text-[#073d24]">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0a6b3b]">
+                  {locale === "zh" ? "下单后流程 · 三步搞定" : "AFTER PAYMENT · 3 STEPS"}
+                </p>
+                <ol className="mt-3 space-y-2 text-sm leading-6">
+                  <li><span className="font-bold">1.</span> {locale === "zh" ? "跳转 brief 页，发产品图 + 投放目标（5 分钟）" : "Land on the brief page, send product images + goals (5 min)"}</li>
+                  <li><span className="font-bold">2.</span> {locale === "zh" ? "我们 24h 内出脚本+分镜给你确认" : "We deliver script + storyboard within 24h"}</li>
+                  <li><span className="font-bold">3.</span> {locale === "zh" ? "48h 内交首条成片，能直接投" : "Final cut shipped in 48h, ad-ready"}</li>
+                </ol>
+              </div>
+              <div className="rounded-[24px] border border-[#9b1e3f]/22 bg-[#fff1f3] p-4 text-[#5e0e22]">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9b1e3f]">
+                  {locale === "zh" ? "本周倒计时 · 名额有限" : "THIS WEEK · LIMITED SLOTS"}
+                </p>
+                <p className="mt-3 text-sm leading-6">
+                  {locale === "zh"
+                    ? "每周只接 12 个新订单，先付款先排期。下周价格上调 30%，现在锁价。"
+                    : "Only 12 new slots per week — payment locks priority. Prices go up 30% next week. Lock yours now."}
+                </p>
+              </div>
             </div>
           </div>
         </div>
