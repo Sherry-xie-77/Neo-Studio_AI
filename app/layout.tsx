@@ -3,6 +3,9 @@ import { Kalam } from "next/font/google";
 import Script from "next/script";
 import { type ReactNode } from "react";
 
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import { PostHogProvider } from "@/components/posthog-provider";
 import { PremiumProvider } from "@/components/premium-provider";
 
@@ -37,6 +40,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </Script>
         <PostHogProvider />
         <PremiumProvider>{children}</PremiumProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
