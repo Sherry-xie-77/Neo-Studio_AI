@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SiteShell } from "@/components/site-shell";
 import { type Locale } from "@/lib/types";
 
-const CUSTOM_AD_EMAIL = "orbit-market@agent.flo.ing";
+const CUSTOM_AD_EMAIL = "studio-labs@agent.flo.ing";
 const CUSTOM_DRAMA_PACKAGE = "20 集定制短剧 / $699";
 
 function getLocale(searchParams: { lang?: string }) {
